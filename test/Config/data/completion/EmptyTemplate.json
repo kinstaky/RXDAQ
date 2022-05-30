@@ -1,0 +1,17 @@
+{
+	"template": [
+		{
+			"name": "100M"
+		}
+	],
+	"crate": [
+		{
+			"slots": [1],
+			"module": [
+				{
+					"template": "100M"
+				}
+			]
+		}
+	]
+}

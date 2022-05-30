@@ -1,0 +1,19 @@
+{
+	"crate": [
+		{
+			"slots": [1],
+			"module": [
+				{
+					"rate": 250,
+					"bits": 14,
+					"ldr": "ldr",
+					"par": "par",
+					"var": "var",
+					"fippi": "fippi",
+					"sys": "sys",
+					"trig": "trig"
+				}
+			]
+		}
+	]
+}
