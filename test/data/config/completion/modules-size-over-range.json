@@ -1,0 +1,80 @@
+{
+	"messageLevel": "debug",
+	"crateId": 0,
+	"templates": [
+		{
+			"name": "100M",
+			"rev": "rev",
+			"rate": 100,
+			"bits": 14,
+			"ldr": "ldr",
+			"par": "par",
+			"var": "var",
+			"fippi": "fippi",
+			"sys": "sys",
+			"trig": "trig"
+		}
+	],
+	"modules": [
+		{
+			"slot": 1,
+			"name": "100M"
+		},
+		{
+			"slot": 2,
+			"name": "100M"
+		},
+		{
+			"slot": 3,
+			"name": "100M"
+		},
+		{
+			"slot": 4,
+			"name": "100M"
+		},
+		{
+			"slot": 5,
+			"name": "100M"
+		},
+		{
+			"slot": 6,
+			"name": "100M"
+		},
+		{
+			"slot": 7,
+			"name": "100M"
+		},
+		{
+			"slot": 8,
+			"name": "100M"
+		},
+		{
+			"slot": 9,
+			"name": "100M"
+		},
+		{
+			"slot": 10,
+			"name": "100M"
+		},
+		{
+			"slot": 11,
+			"name": "100M"
+		},
+		{
+			"slot": 12,
+			"name": "100M"
+		},
+		{
+			"slot": 13,
+			"name": "100M"
+		},
+		{
+			"slot": 14,
+			"name": "100M"
+		},
+		{
+			"slot": 15,
+			"name": "100M"
+		}
+	]
+}

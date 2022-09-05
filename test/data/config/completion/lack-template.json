@@ -1,0 +1,24 @@
+{
+	"messageLevel": "debug",
+	"crateId": 0,
+	"template": [
+		{
+			"name": "500M",
+			"rev": 6,
+			"rate": 100,
+			"bits": 14,
+			"ldr": "ldr",
+			"par": "par",
+			"var": "var",
+			"fippi": "fippi",
+			"sys": "sys",
+			"trig": "trig"
+		}
+	],
+	"modules": [
+		{
+			"slot": 2,
+			"template": "100M"
+		}
+	]
+}

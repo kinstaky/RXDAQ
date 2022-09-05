@@ -1,0 +1,15 @@
+{
+	"messageLevel": "debug",
+	"crateId": 0,
+	"templates": [
+		{
+			"name": "100M"
+		}
+	],
+	"modules": [
+		{
+			"slot": 2,
+			"template": "100M"
+		}
+	]
+}

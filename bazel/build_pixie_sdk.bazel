@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+	name = "sync",
+	hdrs = ["externals/cs/sync.hpp"]
+)
+
+cc_library(
+	name = "json",
+	hdrs = ["externals/nolhmann/json.hpp"]
+)
+
+cc_library(
+  name = "PixieSDK",
+  srcs = glob(["sdk/src/pixie/*.cpp", "sdk/src/pixie/pixie16/*.cpp"]),
+  hdrs = glob(["sdk/include/pixie/*.hpp", "sdk/include/pixie/pixie16/*.hpp"]),
+  copts = ["-Iexternal/PixieSDK/sdk/include", "-Iexternal/PixieSDK/externals", "-std=c++14"],
+  includes = ["sdk/include", "externals"],
+  local_defines = ["PLX_LINUX", "PCI_CODE", "PLX_LITTLE_ENDIAN"],
+  linkopts = ["-pthread"],
+  deps = ["@PlxApi//:PlxApi", "sync", "json"],
+  visibility = ["//visibility:public"],
+)

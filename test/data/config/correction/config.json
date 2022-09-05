@@ -1,0 +1,73 @@
+{
+	"messageLevel": "debug",
+	"crateId": 1,
+	"templates": [
+		{
+			"name": "100M",
+			"rev": 1,
+			"rate": 100,
+			"bits": 11,
+			"ldr": "ldr1",
+			"par": "par1",
+			"var": "var1",
+			"fippi": "fippi1",
+			"sys": "sys1",
+			"trig": "trig1"
+		},
+		{
+			"name": "200M",
+			"rev": 2,
+			"rate": 200,
+			"bits": 12,
+			"ldr": "ldr2",
+			"par": "par2",
+			"var": "var2",
+			"fippi": "fippi2",
+			"sys": "sys2",
+			"trig": "trig2"
+		}
+	],
+	"modules": [
+		{
+			"slot": 2,
+			"template": "100M"
+		},
+		{
+			"slot": 3,
+			"template": "100M",
+			"ldr": "ldr3",
+			"par": "par3",
+			"var": "var3",
+			"fippi": "fippi3",
+			"sys": "sys3",
+			"trig": "trig3"
+		},
+		{
+			"slot": 4,
+			"template": "200M"
+		},
+		{
+			"slot": 5,
+			"template": "200M",
+			"ldr": "ldr4",
+			"par": "par4",
+			"var": "var4",
+			"fippi": "fippi4",
+			"sys": "sys4",
+			"trig": "trig4"
+		},
+		{
+			"slot": 8,
+			"rev": 5,
+			"rate": 500,
+			"bits": 15,
+			"ldr": "ldr5",
+			"par": "par5",
+			"var": "var5",
+			"fippi": "fippi5",
+			"sys": "sys5",
+			"trig": "trig5"
+		}
+
+	]
+}

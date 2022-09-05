@@ -3,10 +3,11 @@
 
 #include "include/parser.h"
 #include "include/interactor.h"
+#include "include/crate.h"
 
 namespace rxdaq {
 
-
+/// This class represents the whole frame of the rxdaq.
 class Frame {
 public:
 
@@ -14,13 +15,16 @@ public:
 	///
 	Frame();
 
+
 	/// @brief default destructor
 	///
 	~Frame() = default;
 
+
 	/// @brief parse parameters and generate interactors
 	///
 	void Parse(int argc, char** argv);
+
 
 	/// @brief set interactor directly
 	///
@@ -30,10 +34,11 @@ public:
 
 	/// @brief run the frame
 	///
-	void Run() const;
+	void Run();
 
 private:
 	std::unique_ptr<Interactor> interactor_;
+	std::shared_ptr<Crate> crate_;
 };
 
 }		// namespace rxdaq

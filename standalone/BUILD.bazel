@@ -1,0 +1,8 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cc_binary(
+	name = "daq",
+	srcs = ["daq.cpp"],
+	copts = ["-std=c++17"],
+	deps = ["@//:frame"]
+)

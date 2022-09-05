@@ -1,0 +1,11 @@
+filegroup(
+	name = "config_completion_data",
+	srcs = glob(["config/completion/*.json"]),
+	visibility = ["//test:__pkg__"],
+)
+
+filegroup(
+	name = "config_correction_data",
+	srcs = glob(["config/correction/*.json"]),
+	visibility = ["//test:__pkg__"],
+)

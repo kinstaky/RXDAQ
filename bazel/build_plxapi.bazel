@@ -1,0 +1,10 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+	name = "PlxApi",
+	hdrs = glob(["Include/*"]),
+	srcs = ["PlxApi/Library/PlxApi.so"],
+	visibility = ["//visibility:public"],
+	includes = ["Include"],
+	linkopts = ["-ldl"],
+)

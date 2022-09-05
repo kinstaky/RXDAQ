@@ -1,5 +1,13 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
+cc_library(
+	name = "test_crate",
+	srcs = ["test_crate.cpp"],
+	hdrs = ["test_crate.h"],
+	copts = ["-std=c++17"],
+	deps = ["//:crate"],
+)
+
 cc_test(
 	name = "parser_test",
 	size = "small",
@@ -12,10 +20,41 @@ cc_test(
 	],
 )
 
-# cc_library(
-#   name = "testCrate",
-#   srcs = ["TestCrate.cpp"],
-#   hdrs = ["TestCrate.h"],
-#   deps = ["//main:crate"],
-#   visibility = ["//test/Interactor:__pkg__"]
-# )
+cc_test(
+	name = "interactor_test",
+	size = "small",
+	srcs = ["interactor_test.cpp"],
+	copts = ["-std=c++17"],
+	deps = [
+		"@com_google_googletest//:gtest_main",
+		"//:interactor",
+		"//:parser",
+		"//test:test_crate"
+	]
+)
+
+cc_test(
+	name = "config_test",
+	size = "small",
+	srcs = ["config_test.cpp"],
+	copts = ["-std=c++17"],
+	deps = [
+		"@com_google_googletest//:gtest_main",
+		"//:config"
+	],
+	data = [
+		"//test/data:config_completion_data",
+		"//test/data:config_correction_data"
+	]
+)
+
+cc_test(
+	name = "message_test",
+	size = "small",
+	srcs = ["message_test.cpp"],
+	copts = ["-std=c++17"],
+	deps = [
+		"@com_google_googletest//:gtest_main",
+		"//:message"
+	]
+)

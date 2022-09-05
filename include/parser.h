@@ -9,6 +9,7 @@
 
 namespace rxdaq {
 
+/// This class parse arguments from the command line and create interactors.
 class Parser {
 public:
 	/// @brief default constructor

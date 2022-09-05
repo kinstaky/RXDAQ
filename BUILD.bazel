@@ -1,11 +1,56 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
+	name = "error",
+	srcs = ["src/error.cpp"],
+	hdrs = ["include/error.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	visibility = ["//visibility:public"]
+)
+
+cc_library(
+	name = "message",
+	srcs = ["src/message.cpp"],
+	hdrs = ["include/message.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	visibility = ["//visibility:public"]
+)
+
+cc_library(
+	name = "config",
+	srcs = ["src/config.cpp"],
+	hdrs = ["include/config.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	deps = ["@json//:json"],
+	visibility = ["//visibility:public"]
+)
+
+cc_library(
+	name = "crate",
+	srcs = ["src/crate.cpp"],
+	hdrs = ["include/crate.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	deps = [
+		"error",
+		"config",
+		"message",
+		"@PixieSDK//:PixieSDK",
+		"@json//:json"
+	],
+	visibility = ["//visibility:public"]
+)
+
+cc_library(
 	name = "interactor",
 	srcs = ["src/interactor.cpp"],
 	hdrs = ["include/interactor.h"],
 	includes = ["include"],
 	copts = ["-std=c++17"],
+	deps = ["crate", "error", "@cxxopts//:cxxopts"],
 	visibility = ["//visibility:public"]
 )
 
@@ -15,6 +60,16 @@ cc_library(
 	hdrs = ["include/parser.h"],
 	includes = ["include"],
 	copts = ["-std=c++17"],
-	deps = ["interactor"],
+	deps = ["interactor", "error"],
+	visibility = ["//visibility:public"]
+)
+
+cc_library(
+	name = "frame",
+	srcs = ["src/frame.cpp"],
+	hdrs = ["include/frame.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	deps = ["parser", "interactor", "crate"],
 	visibility = ["//visibility:public"]
 )

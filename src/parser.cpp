@@ -2,17 +2,22 @@
 
 #include <cstring>
 
+#include "include/error.h"
+
 namespace rxdaq {
 
 std::unique_ptr<Interactor> Parser::Parse(int argc, char **argv) {
+	std::unique_ptr<Interactor> result = nullptr;
+
 	if (argc == 1) {
-		throw std::runtime_error("invalid argument number");
+		throw UserError("too few arguments");
 	}
-	if (!strcmp(argv[1], "help")) {
-		return std::make_unique<HelpCommandParser>();
+	result = Interactor::CreateInteractor(argv[1]);
+	if (!result) {
+		throw UserError("invalid command");
 	}
-	throw std::runtime_error("invalid arguments");
-	return nullptr;
+	result->Parse(argc-1, argv+1);
+	return result;
 }
 
 

@@ -35,9 +35,6 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	# Set the default cxx standard
 	set(CMAKE_CXX_STANDARD 17)
 
-	# Set the default cxx flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
-
 	# Let's nicely support folders in IDE's
 	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -61,8 +58,8 @@ endif()
 # The complied library code
 add_subdirectory(src)
 
-# # Standalone executable program.
-# add_subdirectory(standalone)
+# Standalone executable program.
+add_subdirectory(standalone)
 
 # add test
 if (BUILD_TESTING)

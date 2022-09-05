@@ -2,22 +2,6 @@
 main/
 lib/
 tools/
-standalone/
-include/config.h
-include/error.h
-include/firmware.h
-include/crate.h
-src/config.cpp
-src/error.cpp
-src/firmware.cpp
-src/crate.cpp
-test/Config/
-test/dstring/
-test/Interactor
-test/TestCrate*
-**/BUILD
-WORKSPACE
-*.json
 
 # C/C++ build outputs
 .build/
