@@ -1,0 +1,21 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_test(
+	name = "parser_test",
+	size = "small",
+	srcs = ["parser_test.cpp"],
+	copts = ["-std=c++17"],
+	deps = [
+		"@com_google_googletest//:gtest_main",
+		"//:interactor",
+		"//:parser"
+	],
+)
+
+# cc_library(
+#   name = "testCrate",
+#   srcs = ["TestCrate.cpp"],
+#   hdrs = ["TestCrate.h"],
+#   deps = ["//main:crate"],
+#   visibility = ["//test/Interactor:__pkg__"]
+# )
