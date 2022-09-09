@@ -33,12 +33,12 @@ public:
 	/// @param[in] name type of the interactor
 	/// @returns pointer to the interactor
 	///
-	static std::unique_ptr<Interactor> CreateInteractor(const char *name);
+	static std::unique_ptr<Interactor> CreateInteractor(const char *name) noexcept;
 	
 	
 	/// @brief constructor
 	///
-	Interactor();
+	Interactor() noexcept;
 
 
 	/// @brief default destructor
@@ -50,7 +50,7 @@ public:
 	///
 	/// @returns interactor type
 	///
-	inline InteractorType Type() const {
+	inline InteractorType Type() const noexcept {
 		return type_;
 	}
 
@@ -59,7 +59,7 @@ public:
 	///
 	/// @returns name of the command 
 	///
-	inline virtual std::string CommandName() const {
+	inline virtual std::string CommandName() const noexcept {
 		return "";
 	}
 
@@ -81,7 +81,9 @@ public:
 
 	/// @brief get the help information of this interactor
 	///
-	inline virtual std::string Help() const {
+	/// @returns empty string
+	///
+	inline virtual std::string Help() const noexcept {
 		return "";
 	}
 
@@ -100,7 +102,7 @@ public:
 	/// @param[in] name name of the program
 	/// @param[in] help description of the help information
 	///
-	CommandParser(const std::string &name, const std::string &help);
+	CommandParser(const std::string &name, const std::string &help) noexcept;
 
 
 	/// @brief default destructor
@@ -110,7 +112,7 @@ public:
 
 	/// @brief get the help information of this interactor
 	///
-	inline virtual std::string Help() const override {
+	inline virtual std::string Help() const noexcept override {
 		return options_.help();
 	}
 
@@ -128,7 +130,7 @@ public:
 	
 	/// @brief default constructor
 	///
-	HelpCommandParser();
+	HelpCommandParser() noexcept;
 
 
 	/// @brief default destructor
@@ -136,19 +138,11 @@ public:
 	virtual ~HelpCommandParser() = default;
 
 
-	/// @brief parse the arguments and generate help commands
-	///
-	/// @param[in] argc number of arguments
-	/// @param[in] argv the arguments
-	///
-	virtual void Parse(int argc, char **argv) override;
-
-
 	/// @brief  get the command name
 	///
 	/// @returns command name `help`
 	///
-	inline virtual std::string CommandName() const {
+	inline virtual std::string CommandName() const noexcept override {
 		return std::string("help");
 	}
 
@@ -156,7 +150,18 @@ public:
 	/// @brief get help information
 	///
 	/// @return help information
-	virtual std::string Help() const override;
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and generate help commands
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv the arguments
+	///
+	/// @throws UserError: invalid arguments number or invalid command
+	///
+	virtual void Parse(int argc, char **argv) override;
 
 
 	/// @brief run the interactor and print help information
@@ -178,7 +183,7 @@ public:
 
 	/// @brief constructor
 	///
-	BootCommandParser();
+	BootCommandParser() noexcept;
 
 
 	/// @brief default destructor
@@ -186,21 +191,33 @@ public:
 	~BootCommandParser() = default;
 
 
-	/// @brief parse the arguments and generate help commands
-	///
-	/// @param[in] argc number of arguments
-	/// @param[in] argv the arguments
-	///
-	virtual void Parse(int argc, char **argv) override;
-
-
 	/// @brief  get the command name
 	///
 	/// @returns command name `boot`
 	///
-	inline virtual std::string CommandName() const {
+	inline virtual std::string CommandName() const noexcept override {
 		return std::string("boot");
 	}
+
+
+	/// @brief get help information
+	///
+	/// @return help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get boot information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv the arguments
+	///
+	/// @throws UserError: unmatched arguments or invalid module id
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	
 
 
 	/// @brief run the interactor and boot modules
@@ -210,8 +227,8 @@ public:
 	virtual void Run(std::shared_ptr<Crate> crate) override;
 
 private:
-	int module_;
 	std::string config_path_;
+	int module_;
 };
 
 
@@ -234,6 +251,125 @@ private:
 // 	///
 // 	virtual void Parse(int argc, char **argv) override;
 // };
+
+
+/// This class parse the options of subcommand read and try to read parameters.
+class ReadCommandParser : public CommandParser {
+public:
+
+	/// @brief constructor
+	///
+	ReadCommandParser() noexcept;
+	
+	
+	/// @brief default destructor
+	///
+	~ReadCommandParser() = default;
+
+
+	/// @brief  get the command name
+	///
+	/// @returns command name `boot`
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return "read";
+	}
+
+
+	/// @brief get help information
+	///
+	/// @return help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get read information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv arguments list
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and read parameters
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	std::string name_;
+	int module_;
+	int channel_;
+};
+
+
+
+/// This class parse the options of subcommand write and try to write parameters.
+class WriteCommandParser : public CommandParser {
+public:
+
+	/// @brief constructor
+	///
+	WriteCommandParser() noexcept;
+	
+	
+	/// @brief default destructor
+	///
+	~WriteCommandParser() = default;
+
+
+	/// @brief  get the command name
+	///
+	/// @returns command name `boot`
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return "write";
+	}
+
+
+	/// @brief get help information
+	///
+	/// @return help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get read information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv arguments list
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and read parameters
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	std::string name_;
+	std::string value_;
+	int module_;
+	int channel_;
+};
+
+
+/// @brief create vector of indexes for modules or channels
+///
+/// @param[in] max_index maximum index of the vector 
+/// @param[in] reality_limit reality limit of the vector size
+/// @param[in] index if index is equal to max_index, create the list from 0
+///		to reality limit, otherwise create a vector with only this index 
+/// @returns vector of the indexes
+///
+/// @relates CommandParser
+///
+std::vector<unsigned short> CreateRequestIndexes(unsigned short max_index, unsigned short reality_limit, unsigned short index);
 
 
 }		// namespace rxdaq

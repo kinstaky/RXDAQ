@@ -5,95 +5,74 @@
 namespace rxdaq {
 
 
-TestCrate::TestCrate() {
+TestCrate::TestCrate() noexcept {
 	// initialize virtual modules
 	for (unsigned short i = 0; i < kModuleNum; ++i) {
 		modules_[i].status = ModuleStatus::kInitial;
 		modules_[i].boot_pattern = 0;
 	}
+	list_ = false;
 }
 
 
-void TestCrate::Initialize(const std::string&) {
+void TestCrate::Initialize(const std::string&) noexcept {
 	return;
 }
 
 
-void TestCrate::Boot(unsigned short module, unsigned short boot_pattern) {
-	std::cout << "boot " << module << " pattern " << boot_pattern << std::endl;
+void TestCrate::Boot(unsigned short module, unsigned short boot_pattern) noexcept {
 	modules_[module].status = ModuleStatus::kBooted;
 	modules_[module].boot_pattern = boot_pattern;
 	return;
 }
 
 
+std::string TestCrate::ListParameters(ParameterType) noexcept {
+	list_ = true;
+	return "";
+}
 
-// void TestCrate::Init() {
-// 	std::cout << "TestCrate::Init()" << std::endl;
-// 	config.ReadFromFile(configFile, crateID);
-// 	return;
-// }
+unsigned int TestCrate::ReadParameter(
+	const std::string &name,
+	unsigned short module
+) noexcept {
 
-// void TestCrate::Boot(unsigned short module_, unsigned short bootPattern_) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::Boot(";
-// 	if (module_ == 16) ss << "All Modules";
-// 	else ss << "Module " << module_;
-// 	ss << ", 0x" << std::hex << bootPattern_;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
+	return modules_[module].module_parameters[name];
+}
 
 
-// void TestCrate::ReadModuleParameter(const std::string &name, unsigned int *par, unsigned short module_) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::ReadModuleParameter(" << name;
-// 	if (module_ == 16) ss << ", All Modules";
-// 	else ss << ", Module " << module_;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
+double TestCrate::ReadParameter(
+	const std::string &name,
+	unsigned short module,
+	unsigned short channel
+) noexcept {
+
+	return modules_[module].channel_parameters[channel][name];
+}
 
 
-// void TestCrate::ReadChannelParameter(const std::string &name, double *par, unsigned short module_, unsigned short channel_) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::ReadChannelParameter(" << name;
-// 	if (module_ == 16) ss <<", All Modules";
-// 	else ss << ", Module " << module_;
-// 	if (channel_ == 16) ss << ", All Channels";
-// 	else ss << ", Channel " << channel_;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
+void TestCrate::WriteParameter(
+	const std::string &name,
+	unsigned int value,
+	unsigned short module
+) noexcept {
+
+	modules_[module].module_parameters.insert(std::make_pair(name, value));
+	return;
+}
 
 
-// void TestCrate::WriteModuleParameter(const std::string &name, unsigned int par, unsigned short module_) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::WriteModuleParameter(" << name;
-// 	ss << ", " << std::hex << par;
-// 	if (module_ == 16) ss << ", All Modules";
-// 	else ss << ", Module " << module_;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
+void TestCrate::WriteParameter(
+	const std::string &name,
+	double value,
+	unsigned short module,
+	unsigned short channel
+) noexcept {
 
+	modules_[module].channel_parameters[channel].insert(std::make_pair(name, value));
+	return;
+}
 
-// void TestCrate::WriteChannelParameter(const std::string &name, double par, unsigned short module_, unsigned short channel_) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::WriteChannelParameter(" << name;
-// 	ss << ", " << par;
-// 	if (module_ == 16) ss << ", All Modules";
-// 	else ss << ", Module " << module_;
-// 	if (channel_ == 16) ss << ", All Channels";
-// 	else ss << ", Channel " << channel_;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
 
 
 // void TestCrate::Run(unsigned short module_, unsigned int time_) {

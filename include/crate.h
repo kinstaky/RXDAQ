@@ -22,8 +22,18 @@ const unsigned short kEntireBoot = 0xf;
 /// parameters type
 enum class ParameterType {
 	kAll = 0,
+	kCrate,
 	kModule,
-	kChannel
+	kChannel,
+	kInvalid
+};
+/// parameters type - parameter type name
+const std::map<ParameterType, std::string> kParameterTypeNames = {
+	{ParameterType::kAll, "all"},
+	{ParameterType::kCrate, "crate"},
+	{ParameterType::kModule, "module"},
+	{ParameterType::kChannel, "channel"},
+	{ParameterType::kInvalid, "invalid"}
 };
 
 
@@ -36,18 +46,36 @@ public:
 
 	/// @brief default constructor
 	///
-	Crate();
+	Crate() noexcept;
 
 
 	/// @brief default destructor
 	virtual ~Crate() = default;
 
 
-	// public method
+	//-------------------------------------------------------------------------
+	// 					method to get crate information
+	//-------------------------------------------------------------------------
+
+	/// @brief get module number
+	///
+	/// @returns module number
+	///
+	virtual inline unsigned short ModuleNum() const noexcept {
+		return config_.ModuleNum();
+	}
+
+
+	//-------------------------------------------------------------------------
+	//	 				method to initialize and boot
+	//-------------------------------------------------------------------------
+
 
 	/// @brief initialize the crate
 	///
 	/// @param[in] config_path path of config file, "" for default
+	///
+	/// @throws XiaError if initialize failed
 	///
 	virtual void Initialize(const std::string &config_path = "");
 
@@ -57,63 +85,85 @@ public:
 	/// @param[in] module_id module to boot
 	/// @param[in] boot_pattern boot pattern, kFastBoot or kEntireBoot
 	///
+	/// @throws UserError if firmware version of config error
+	/// @throws XiaError if boot failed
+	///
 	virtual void Boot(unsigned short module_id, unsigned short boot_pattern = kFastBoot);
+
+
+	//-------------------------------------------------------------------------
+	//	 				method to read and write parameters
+	//-------------------------------------------------------------------------
+
+	/// @brief list parameters
+	///
+	/// @returns list of parameters in string format
+	///
+	virtual std::string ListParameters(
+		ParameterType type = ParameterType::kAll
+	) noexcept;
+
+
+	/// @brief check parameter type by name
+	///
+	/// @param[in] name parameter name
+	/// @returns parameter type enum class
+	///
+	virtual ParameterType CheckParameter(const std::string &name) noexcept;
 	
 
-	// /// @brief read module parameter
-	// ///
-	// /// @param[in] name name of the parameter
-	// /// @param[in] module modules to read
-	// /// @param[out] value read value of parameter
-	// ///
-	// virtual void ReadModuleParameter(
-	// 	const std::string &name,
-	// 	unsigned short module,
-	// 	unsigned int &value
-	// );
+	/// @brief read module parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] module modules to read
+	/// @returns parameter value
+	///
+	virtual unsigned int ReadParameter(
+		const std::string &name,
+		unsigned short module
+	);
 
 
-	// /// @brief read channel parameters
-	// ///
-	// /// @param[in] name name of the parameter
-	// /// @param[in] module the module to read 
-	// /// @param[in] channel the channel to read
-	// /// @param[out] value read value of parameter
-	// ///
-	// virtual void ReadChannelParameter(
-	// 	const std::string &name,
-	// 	unsigned short module,
-	// 	unsigned short channel,
-	// 	double &value
-	// );
+	/// @brief read channel parameters
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] module the module to read 
+	/// @param[in] channel the channel to read
+	/// @returns parameter value
+	///
+	virtual double ReadParameter(
+		const std::string &name,
+		unsigned short module,
+		unsigned short channel
+	);
 
 
-	// /// @brief write module parameter
-	// ///
-	// /// @param name name of the parameter
-	// /// @param module module to write
-	// /// @param value value to write
-	// ///
-	// virtual void WriteModuleParameter(
-	// 	const std::string &name,
-	// 	unsigned short module,
-	// 	unsigned int value
-	// );
+	/// @brief write module parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] value value to write
+	/// @param[in] module module to write
+	///
+	virtual void WriteParameter(
+		const std::string &name,
+		unsigned int value,
+		unsigned short module
+	);
 
 
-	// /// @brief write channel parameter
-	// ///
-	// /// @param name name of the parameter
-	// /// @param module module to write
-	// /// @param channel channel to write
-	// /// @param value value to write
-	// ///
-	// virtual void WriteChannelParameter(
-	// 	const std::string &name,
-	// 	unsigned short module,
-	// 	unsigned short channel,
-	// 	double value
-	// );
+	/// @brief write channel parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] value value to write
+	/// @param[in] module module to write
+	/// @param[in] channel channel to write
+	///
+	virtual void WriteParameter(
+		const std::string &name,
+		double value,
+		unsigned short module,
+		unsigned short channel
+	);
 
 
 
@@ -126,10 +176,9 @@ public:
 	// virtual void SetRunConfig(const std::string &path);
 	// virtual void SetRunConfig(const std::string &path, const std::string &name, unsigned int run);
 
-	// virtual int CheckParameterName(const std::string &name);
-	// virtual unsigned short ModuleNum() const;
 
-	// virtual std::string ListParameters();
+
+	
 
 	// std::string configFile;
 	// int crateID;

@@ -26,12 +26,15 @@ const size_t kFifoIdleWaitUsecs = 150000;
 const size_t kFifoHoldUsecs = 50000;
 
 
-Crate::Crate()
+Crate::Crate() noexcept
 : message_(Message::Level::kWarning), config_path_("config.json") {
 }
 
 
 void Crate::Initialize(const std::string &config_path) {
+	if (!config_path.empty()) {
+		config_path_ = config_path;
+	}
 	// read config from json file
 	config_.ReadFromFile(config_path_);
 	message_.SetLevel(Message::ToLevel(config_.MessageLevel()));
@@ -194,19 +197,135 @@ void Crate::Boot(unsigned short module_id, unsigned short boot_pattern) {
 	return;
 }
 
+
+//-----------------------------------------------------------------------------
+//	 				method to read and write parameters
+//-----------------------------------------------------------------------------
+
+std::string Crate::ListParameters(ParameterType type) noexcept {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::ListParameters(" << kParameterTypeNames.at(type) << ")\n";
+
+	std::string result = "";
+	
+	// module parameters
+	if (type == ParameterType::kAll || type == ParameterType::kModule) {
+		result += "Module parameters\n";
+		const auto module_parameters = xia::pixie::param::get_module_param_map();
+		for (const auto &parameter : module_parameters) {
+			result += "  " + parameter.first + "\n";
+		}
+	}
+
+	// channel parameters
+	if (type == ParameterType::kAll || type == ParameterType::kChannel) {
+			result += "\nChannel parameters\n";
+		const auto channel_parameters = xia::pixie::param::get_channel_param_map();
+		for (const auto &parameter : channel_parameters) {
+			result += "  " + parameter.first + "\n";
+		}
+	}
+
+	return result;
+}
+
+
+ParameterType Crate::CheckParameter(const std::string &name) noexcept {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::CheckParameterName(" << name << ")\n";
+
+	if (xia::pixie::param::is_module_param(name)) {
+		return ParameterType::kModule;
+	}
+	if (xia::pixie::param::is_channel_param(name)) {
+		return ParameterType::kChannel;
+	}
+	return ParameterType::kInvalid;
+	// if (XiaParam::is_system_param(name)) return TypeSystemParameter;
+	// if (XiaParam::is_module_var(name)) return TypeModuleVariable;
+	// if (XiaParam::is_channel_var(name)) return TypeChannelVariable;
+}
+
+
+
+
+unsigned int Crate::ReadParameter(
+	const std::string &name,
+	unsigned short module
+) {
+	
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::ReadModuleParameter(" << name << ", " << module << ")\n";
+
+	xia_crate_.ready();
+	xia::pixie::crate::module_handle module_handler(xia_crate_, module);
+	return module_handler->read(name);
+}
+
+
+double Crate::ReadParameter(
+	const std::string &name,
+	unsigned short module,
+	unsigned short channel
+) {
+
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::ReadChannelParameter(" << name << ", " << module
+		<< ", " << channel << ")\n";
+	xia_crate_.ready();
+	xia::pixie::crate::module_handle module_handler(xia_crate_, module);
+	return module_handler->read(name, channel);
+}
+
+
+
+void Crate::WriteParameter(
+	const std::string &name,
+	unsigned int value,
+	unsigned short module
+) {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::WriteModuleParameter("  << name << ", " << module
+		<< ", " << value <<  ")\n";
+
+	xia_crate_.ready();
+	bool bcast;
+	if (module == kModuleNum) {
+		bcast = true;
+	} else {
+		xia::pixie::crate::module_handle module_handler(xia_crate_, module);
+		bcast = module_handler->write(name, value);
+	}
+	// some parameters should be written to all modules
+	if (bcast) {
+		xia::pixie::crate::crate::user user(xia_crate_);
+		for (auto &m : xia_crate_.modules) {
+			if (module != m->number && m->online()) {
+				m->write(name, value);
+			}
+		}
+	}
+}
+
+
+void Crate::WriteParameter(
+	const std::string &name,
+	double value,
+	unsigned short module,
+	unsigned short channel
+) {
+
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::WriteChannelParameter(" << name << ", " << module << ", "
+		<< channel << ", " << value << ")\n";
+	xia_crate_.ready();
+	xia::pixie::crate::module_handle module_handler(xia_crate_, module);
+	module_handler->write(name, channel, value);
+}
+
+
+
 }	 // namespace rxdaq
-
-
-
-
-
-
-// Crate::Crate() {
-// 	configFile = "";
-// }
-
-// Crate::~Crate() {
-// }
 
 
 
@@ -254,247 +373,6 @@ void Crate::Boot(unsigned short module_id, unsigned short boot_pattern) {
 
 
 
-
-// void Crate::bootOneModule(unsigned short module_, unsigned short bootPattern_) {
-// 	std::stringstream ss;
-// 	ss << "Crate::bootOneModule(" << module_ << ", 0x" << std::hex << bootPattern_ << ")\n";
-// 	std::cout << ds(dlv::Debug, ss.str());
-
-// 	// check module firmware information before boot
-// 	xia::pixie::module::module &module = *(xia_crate_.modules[module_]);
-// 	if (module.revision != config_.Rev(module_)) {
-// 		std::stringstream ss;
-// 		ss << "Revision of module " << module_ << " is " << module.revision;
-// 		ss << " NOT equal to " << config_.Rev(module_) << " in config file.\n";
-// 		throw UserError(ss.str());
-// 	}
-// 	if (module.configs[0].adc_msps != config_.Rate(module_)) {
-// 		std::stringstream ss;
-// 		ss << "ADC sampling rate of module " << module_ << " is " << module.configs[0].adc_msps;
-// 		ss << " NOT equal to " << config_.Rate(module_) << " in config file.\n";
-// 		throw UserError(ss.str());
-// 	}
-// 	if (module.configs[0].adc_bits != config_.Bits(module_)) {
-// 		std::stringstream ss;
-// 		ss << "ADC bits of module " << module_ << " is " << module.configs[0].adc_bits;
-// 		ss << " NOT equal to " << config_.Bits(module_) << " in config file.\n";
-// 		throw UserError(ss.str());
-// 	}
-
-// 	std::cout << ds(dlv::Debug, "Crate::bootOneModule: load firmwares\n");
-
-// 	// check firmwares
-// 	typedef std::shared_ptr<Firmware> Firmware_ref;
-// 	Firmware_ref fw[4];			// firmwares
-// 	std::string fileName[4] = {config_.Sys(module_), config_.Fippi(module_), config_.Ldr(module_), config_.Var(module_)};
-// 	std::string deviceName[4] = {"sys", "fippi", "dsp", "var"};
-
-// 	// create or get firmware
-// 	lck.lock();
-// 	for (size_t i = 0; i != 4; ++i) {
-// 		if (firmwares.find(fileName[i]) == firmwares.end()) {
-// 			fw[i] = std::make_shared<Firmware>("n/a", module.revision, module.configs[0].adc_msps, module.configs[0].adc_bits, deviceName[i], fileName[i]);
-// 			firmwares.insert(std::make_pair(fileName[i], fw[i]));
-// 		} else {
-// 			fw[i] = firmwares[fileName[i]];
-// 		}
-// 		fw[i]->slot.push_back(module.slot);
-// 	}
-// 	lck.unlock();
-
-
-
-// 	// firmware comm_fw("n/a", module.revision, module.configs[0].adc_msps, module.configs[0].adc_bits, "sys");
-// 	// firmware fippi_fw("n/a", module.revision, module.configs[0].adc_msps, module.configs[0].adc_bits, "fippi");
-// 	// firmware dsp_fw("n/a", module.revision, module.configs[0].adc_msps, module.configs[0].adc_bits, "dsp");
-// 	// firmware dsp_var("n/a", module.revision, module.configs[0].adc_msps, module.configs[0].adc_bits, "var");
-
-
-// 	for (size_t i = 0; i != 4; ++i) {
-// 		fw[i]->load();
-// 	}
-
-// 	// comm_fw->lck.lock();
-// 	// comm_fw->filename = config_.Sys(module_);
-// 	// comm_fw->readData = false;
-// 	// comm_fw->slot.push_back(module.slot);
-// 	// comm_fw->lck.unlock();
-
-// 	// fippi_fw->lck.lock();
-// 	// fippi_fw->filename = config_.Fippi(module_);
-// 	// fippi_fw->readData = false;
-// 	// fippi_fw->slot.push_back(module.slot);
-// 	// fippi_fw->lck.unlock();
-
-// 	// dsp_fw->lck.lock();
-// 	// dsp_fw->filename = config_.Ldr(module_);
-// 	// dsp_fw->readData = false;
-// 	// dsp_fw->slot.push_back(module.slot);
-// 	// dsp_fw->lck.unlock();
-
-// 	// dsp_var->lck.lock();
-// 	// dsp_var->filename = config_.Var(module_);
-// 	// dsp_var->readData = false;
-// 	// dsp_var->slot.push_back(module.slot);
-// 	// dsp_var->lck.unlock();
-
-// 	// std::string tag = fw[0]->tag;
-// 	for (auto &fp : fw) {
-// 		module.firmware.push_back(fp);
-// 	}
-
-// 	// xia::pixie::crate::crate::guard *crateGuard;
-// 	// crateGuard = new xia::pixie::crate::crate::guard(xia_crate_);
-// 	// xia::pixie::firmware::add(xia_crate_.firmware, comm_fw);
-// 	// xia::pixie::firmware::add(xia_crate_.firmware, fippi_fw);
-// 	// xia::pixie::firmware::add(xia_crate_.firmware, dsp_fw);
-// 	// xia::pixie::firmware::add(xia_crate_.firmware, dsp_var);
-
-
-// 	// // xia_crate_.set_firmware();
-// 	// auto tag = comm_fw.tag;
-// 	// module.add(xia_crate_.firmware[tag]);
-
-
-// 	// for (auto &fw : xia_crate_.firmware[tag]) {
-// 	// 	fw->load();
-// 	// }
-// 	// delete crateGuard;
-
-// 	// xia::pixie::firmware::load(xia_crate_.firmware[tag]);
-
-
-// 	const int BOOTPATTERN_COMFPGA_BIT = 0x1;
-// 	const int BOOTPATTERN_SPFPGA_BIT = 0x2;
-// 	const int BOOTPATTERN_DSPCODE_BIT = 0x4;
-// 	const int BOOTPATTERN_DSPPAR_BIT = 0x8;
-
-// 	bool boot_comm = (bootPattern_ & BOOTPATTERN_COMFPGA_BIT) != 0;
-// 	bool boot_fippi = (bootPattern_ & BOOTPATTERN_SPFPGA_BIT) != 0;
-// 	bool boot_dsp = (bootPattern_ & BOOTPATTERN_DSPCODE_BIT) != 0;
-
-// 	std::cout << ds(dlv::Debug, "Crate::bootOneModule: module boot\n");
-
-// 	module.probe();
-// 	module.boot(boot_comm, boot_fippi, boot_dsp);
-
-// 	bool json_config = false;
-// 	xia::pixie::legacy::settings settings(module);
-
-// 	try {
-// 		std::cout << ds(dlv::Debug, "Crate::bootOneModule: load parameters settings\n");
-
-// 		settings.load(config_.Par(module_));
-// 	}  catch (xia::pixie::error::error& err) {
-// 		if (err.type == xia::pixie::error::code::module_total_invalid) {
-// 			json_config = true;
-// 			xia::pixie::module::number_slots modules;
-// 			xia_crate_.import_config(config_.Par(module_), modules);
-// 		} else {
-// 			throw;
-// 		}
-// 	}
-
-// 	if (!json_config) {
-// 		settings.import(module);
-// 		settings.write(module);
-// 		module.sync_vars();
-// 		if ((bootPattern_ & BOOTPATTERN_DSPPAR_BIT) != 0) {
-// 			module.sync_hw();
-// 		}
-// 	}
-
-// 	std::cout << ds(dlv::Debug, "Crate::bootOneModule() ends\n");
-// 	return;
-// }
-
-
-
-
-
-// void Crate::ReadModuleParameter(const std::string &name_, unsigned int *par_, unsigned short module_) {
-// 	std::cout << ds(dlv::Debug, "Crate::ReadModuleParameter(" + name_ + ", " + std::to_string(module_) + ")\n");
-// 	try {
-// 		xia_crate_.ready();
-// 		xia::pixie::crate::module_handle module(xia_crate_, module_);
-// 		*par_ = module->read(name_);
-// 	} catch (const UserError &e) {						// user operation error
-// 		throw UserError(e.what());
-// 	} catch (const XiaError &e) {						// fatal xia error
-// 		throw XiaError(e.type, e.what());
-// 	} catch (const RXError &e) {						// fatal RXDAQ error
-// 		throw RXError(e.what());
-// 	} catch (const std::exception &e) {					// fatal error
-// 		throw std::runtime_error(e.what());
-// 	}
-// }
-
-
-// void Crate::ReadChannelParameter(const std::string &name_, double *par_, unsigned short module_, unsigned short channel_) {
-// 	std::cout << ds(dlv::Debug, "Crate::ReadChannelParameter(" + name_ + ", " + std::to_string(module_) + ", " + std::to_string(channel_) + ")\n");
-// 	try {
-// 		xia_crate_.ready();
-// 		xia::pixie::crate::module_handle module(xia_crate_, module_);
-// 		*par_ = module->read(name_, channel_);
-// 	} catch (const UserError &e) {						// user operation error
-// 		throw UserError(e.what());
-// 	} catch (const XiaError &e) {						// fatal xia error
-// 		throw XiaError(e.type, e.what());
-// 	} catch (const RXError &e) {						// fatal RXDAQ error
-// 		throw RXError(e.what());
-// 	} catch (const std::exception &e) {					// fatal error
-// 		throw std::runtime_error(e.what());
-// 	}
-// }
-
-
-// void Crate::WriteModuleParameter(const std::string &name_, unsigned int val_, unsigned short module_) {
-// 	std::cout << ds(dlv::Debug, "Crate::WriteModuleParameter(" + name_ + ", " + std::to_string(val_) + ", " + std::to_string(module_) + ")\n");
-// 	try {
-// 		xia_crate_.ready();
-// 		bool bcast;
-// 		if (module_ == AllModules) {
-// 			bcast = true;
-// 		} else {
-// 			xia::pixie::crate::module_handle module(xia_crate_, module_);
-// 			bcast = module->write(name_, val_);
-// 		}
-// 		// some parameters should be written to all modules
-// 		if (bcast) {
-// 			xia::pixie::crate::crate::user user(xia_crate_);
-// 			for (auto &module : xia_crate_.modules) {
-// 				if (module_ != module->number && module->online()) {
-// 					module->write(name_, val_);
-// 				}
-// 			}
-// 		}
-// 	} catch (const UserError &e) {						// user operation error
-// 		throw UserError(e.what());
-// 	} catch (const XiaError &e) {						// fatal xia error
-// 		throw XiaError(e.type, e.what());
-// 	} catch (const RXError &e) {						// fatal RXDAQ error
-// 		throw RXError(e.what());
-// 	} catch (const std::exception &e) {					// fatal error
-// 		throw std::runtime_error(e.what());
-// 	}
-// }
-
-// void Crate::WriteChannelParameter(const std::string &name_, double val_, unsigned short module_, unsigned short channel_) {
-// 	std::cout << ds(dlv::Debug, "Crate::WriteChannelParameter(" + name_ + ", " + std::to_string(val_) + ", " + std::to_string(module_) + ", " + std::to_string(channel_) + ")\n");
-// 	try {
-// 		xia_crate_.ready();
-// 		xia::pixie::crate::module_handle module(xia_crate_, module_);
-// 		module->write(name_, channel_, val_);
-// 	} catch (const UserError &e) {						// user operation error
-// 		throw UserError(e.what());
-// 	} catch (const XiaError &e) {						// fatal xia error
-// 		throw XiaError(e.type, e.what());
-// 	} catch (const RXError &e) {						// fatal RXDAQ error
-// 		throw RXError(e.what());
-// 	} catch (const std::exception &e) {					// fatal error
-// 		throw std::runtime_error(e.what());
-// 	}
-// }
 
 // void Crate::Run(unsigned short module_, unsigned int time_) {
 // 	std::cout << ds(dlv::Debug, "Crate::Run(" + std::to_string(module_) + ", " + std::to_string(time_) + ")\n");
@@ -707,40 +585,6 @@ void Crate::Boot(unsigned short module_id, unsigned short boot_pattern) {
 // }
 
 
-// int Crate::CheckParameterName(const std::string &name) {
-// 	std::cout << ds(dlv::Debug, "Crate::CheckParameterName(" + name + ")\n");
-// 	// typedef xia::pixie::param XiaParam;
-// 	if (xia::pixie::param::is_module_param(name)) return TypeModuleParameter;
-// 	if (xia::pixie::param::is_channel_param(name)) return TypeChannelParameter;
-// 	return 0;
-// 	// if (XiaP50aram::is_system_param(name)) return TypeSystemParameter;
-// 	// if (XiaParam::is_module_var(name)) return TypeModuleVariable;
-// 	// if (XiaParam::is_channel_var(name)) return TypeChannelVariable;
-// }
-
-
-// std::string Crate::ListParameters(int type) {
-// 	std::cout << ds(dlv::Debug, "Crate::ListParameters(" + std::to_string(type) + ")\n");
-// 	typedef xia::pixie::param::module_param_map module_param_map;
-// 	typedef xia::pixie::param::channel_param_map channel_param_map;
-// 	std::stringstream ss;
-// 	ss << "Module parameters" << std::endl;
-// 	module_param_map moduleParams = xia::pixie::param::get_module_param_map();
-// 	for (auto &par : moduleParams) {
-// 		ss << "    " << par.first << std::endl;
-// 	}
-// 	ss << "\nChannel parameters" << std::endl;
-// 	channel_param_map channelParams = xia::pixie::param::get_channel_param_map();
-// 	for (auto &par : channelParams) {
-// 		ss << "    " << par.first << std::endl;
-// 	}
-// 	return ss.str();
-// }
-
-// unsigned short Crate::ModuleNum() const {
-// 	std::cout << ds(dlv::Debug, "Crate::ModuleNum()\n");
-// 	return config_.ModuleNum();
-// }
 
 
 // void Crate::PrintInfo() const {

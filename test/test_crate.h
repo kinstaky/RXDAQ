@@ -25,26 +25,41 @@ public:
 	struct TestModule {
 		ModuleStatus status;
 		unsigned short boot_pattern;
+		std::map<std::string, unsigned int> module_parameters;
+		std::map<std::string, double> channel_parameters[kChannelNum];
 	};
 
 
 	/// @brief constructor
 	///
-	TestCrate();
+	TestCrate() noexcept;
 	
 	
 	/// @brief default destructor
 	///
 	virtual ~TestCrate() = default;
 
+
+	//-------------------------------------------------------------------------
+	// 					method to get crate information
+	//-------------------------------------------------------------------------
+
+	/// @brief get module number
+	///
+	/// @returns module number
+	///
+	virtual inline unsigned short ModuleNum() const noexcept override {
+		return 10;
+	}
+
 	
 	//-------------------------------------------------------------------------
-	// 						main function interface
+	// 					method to initialize and boot
 	//-------------------------------------------------------------------------
 
 	/// @brief initialize crate
 	///
-	virtual void Initialize(const std::string &config_path) override;
+	virtual void Initialize(const std::string &config_path) noexcept override;
 
 
 	/// @brief boot modules
@@ -55,19 +70,84 @@ public:
 	virtual void Boot(
 		unsigned short module,
 		unsigned short boot_pattern = kFastBoot
-	) override;
+	) noexcept override;
 
 
-	// virtual void ReadModuleParameter(const std::string &name, unsigned int *par, unsigned short module_) override;
-	// virtual void ReadChannelParameter(const std::string &name, double *par, unsigned short module_, unsigned short channel_) override;
-	// virtual void WriteModuleParameter(const std::string &name, unsigned int par, unsigned short module_) override;
-	// virtual void WriteChannelParameter(const std::string &name, double par, unsigned short module_, unsigned short channel_) override;
+	//-------------------------------------------------------------------------
+	//	 				method to read and write parameters
+	//-------------------------------------------------------------------------
+
+	/// @brief list parameters
+	///
+	/// @returns list of parameters in string format
+	///
+	virtual std::string ListParameters(
+		ParameterType type = ParameterType::kAll
+	) noexcept override;
+
+
+	/// @brief read module parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] module modules to read
+	/// @returns parameter value
+	///
+	virtual unsigned int ReadParameter(
+		const std::string &name,
+		unsigned short module
+	) noexcept override;
+
+
+	/// @brief read channel parameters
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] module the module to read 
+	/// @param[in] channel the channel to read
+	/// @returns parameter value
+	///
+	virtual double ReadParameter(
+		const std::string &name,
+		unsigned short module,
+		unsigned short channel
+	) noexcept override;
+
+
+	/// @brief write module parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] value value to write
+	/// @param[in] module module to write
+	///
+	virtual void WriteParameter(
+		const std::string &name,
+		unsigned int value,
+		unsigned short module
+	) noexcept override;
+	
+	
+	/// @brief write channel parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] value value to write
+	/// @param[in] module module to write
+	/// @param[in] channel channel to write
+	///
+	virtual void WriteParameter(
+		const std::string &name,
+		double value,
+		unsigned short module,
+		unsigned short channel
+	) noexcept override;
+
+
+
 	// virtual void Run(unsigned short module_, unsigned int time_) override;
 	// virtual void EndRun(unsigned short module_) override;
 	// virtual void ImportParameters(const std::string &path_) override;
 	// virtual void ExportParameters(const std::string &path_) override;
 
 	TestModule modules_[kModuleNum];
+	bool list_;
 };
 
 }	// namespace rxdaq
