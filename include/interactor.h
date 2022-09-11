@@ -359,6 +359,110 @@ private:
 };
 
 
+/// This class parse the options of subcommand import and import the module
+/// and channel parameters from file.
+class ImportCommandParser : public CommandParser {
+public:
+
+	/// @brief constructor
+	///
+	ImportCommandParser() noexcept;
+
+
+	/// @brief default destructor
+	///
+	virtual ~ImportCommandParser() = default;
+
+
+	/// @brief  get the command name
+	///
+	/// @returns command name `boot`
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return "import";
+	}
+
+
+	/// @brief get help information
+	///
+	/// @return help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get read information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv arguments list
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and read parameters
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	std::string parameter_config_path_;
+};
+
+
+/// This class parse the options of subcommand export and export the module
+/// and channel parameters to file.
+class ExportCommandParser : public CommandParser {
+public:
+
+	/// @brief constructor
+	///
+	ExportCommandParser() noexcept;
+
+
+	/// @brief default destructor
+	///
+	virtual ~ExportCommandParser() = default;
+
+
+	/// @brief  get the command name
+	///
+	/// @returns command name `boot`
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return "export";
+	}
+
+
+	/// @brief get help information
+	///
+	/// @return help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get read information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv arguments list
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and read parameters
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	std::string parameter_config_path_;
+
+};
+
+
+
 /// @brief create vector of indexes for modules or channels
 ///
 /// @param[in] max_index maximum index of the vector 

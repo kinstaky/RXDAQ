@@ -10,6 +10,7 @@ TestCrate::TestCrate() noexcept {
 	for (unsigned short i = 0; i < kModuleNum; ++i) {
 		modules_[i].status = ModuleStatus::kInitial;
 		modules_[i].boot_pattern = 0;
+		modules_[i].config_file = "";
 	}
 	list_ = false;
 }
@@ -74,6 +75,24 @@ void TestCrate::WriteParameter(
 }
 
 
+void TestCrate::ImportParameters(const std::string &path) {
+	for (unsigned short m = 0; m < ModuleNum(); ++m) {
+		modules_[m].config_file = path;
+		modules_[m].status = ModuleStatus::kImported;
+	}
+	return;
+}
+
+
+void TestCrate::ExportParameters(const std::string &path) {
+	for (unsigned short m = 0; m < ModuleNum(); ++m) {
+		modules_[m].config_file = path;
+		modules_[m].status = ModuleStatus::kExported;
+	}
+	return;
+}
+
+
 
 // void TestCrate::Run(unsigned short module_, unsigned int time_) {
 // 	std::stringstream ss;
@@ -105,24 +124,7 @@ void TestCrate::WriteParameter(
 // }
 
 
-// void TestCrate::ImportParameters(const std::string &path) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::ImportParameters(";
-// 	ss << path;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
 
-
-// void TestCrate::ExportParameters(const std::string &path) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::ExportParameters(";
-// 	ss << path;
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	return;
-// }
 
 
 }	 	// namespace rxdaq

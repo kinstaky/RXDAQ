@@ -325,13 +325,30 @@ void Crate::WriteParameter(
 
 
 
+void Crate::ImportParameters(const std::string &path) {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::ImportParameters(" << path << ").\n";
+
+	xia::pixie::module::number_slots loaded;
+	xia_crate_.import_config(path, loaded);
+}
+
+
+
+void Crate::ExportParameters(const std::string &path) {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::ExportParameters(" <<  path << ").\n";
+	
+	xia_crate_.export_config(path);
+}
+
+
+
 }	 // namespace rxdaq
 
 
 
-// void Crate::SetConfigFile(const char *path) {
-// 	configFile = path;
-// }
+
 
 
 // void Crate::SetRunConfig(const std::string &path_) {
@@ -525,44 +542,7 @@ void Crate::WriteParameter(
 // }
 
 
-// void Crate::ExportParameters(const std::string &path_) {
-// 	std::cout << ds(dlv::Debug, "Crate::ExportParameters(" + path_ + ").\n");
-// 	try {
-// 		xia_crate_.export_config(path_);
-// 	} catch (const UserError &e) {						// user operation error
-// 		throw UserError(e.what());
-// 	} catch (const XiaError &e) {						// fatal xia error
-// 		throw XiaError(e.type, e.what());
-// 	} catch (const RXError &e) {						// fatal RXDAQ error
-// 		throw RXError(e.what());
-// 	} catch (const std::exception &e) {					// fatal error
-// 		throw std::runtime_error(e.what());
-// 	}
-// }
 
-
-// void Crate::ImportParameters(const std::string &path_) {
-// 	std::cout << ds(dlv::Debug, "Crate::ImportParameters(" + path_ + ").\n");
-// 	try {
-// 		xia::pixie::module::number_slots loaded;
-// 		xia_crate_.import_config(path_, loaded);
-
-// 		std::stringstream ss;
-// 		for (auto &slot : loaded) {
-// 			ss << slot.first << "->" << slot.second << "  ";
-// 		}
-// 		ss << "\n";
-// 		std::cout << ds(dlv::Debug, ss.str());
-// 	} catch (const UserError &e) {						// user operation error
-// 		throw UserError(e.what());
-// 	} catch (const XiaError &e) {						// fatal xia error
-// 		throw XiaError(e.type, e.what());
-// 	} catch (const RXError &e) {						// fatal RXDAQ error
-// 		throw RXError(e.what());
-// 	} catch (const std::exception &e) {					// fatal error
-// 		throw std::runtime_error(e.what());
-// 	}
-// }
 
 
 // void Crate::readListData(xia::pixie::crate::module_handle &module_, std::ofstream &fout, unsigned int threshold) {

@@ -85,6 +85,17 @@ vector<WriteData> kWriteCommands = {
 	{"write --value 16.0 --name BLCUT --module 0", 0, 16, "BLCUT", ParameterType::kChannel, 0, 16.0},
 	{"write -n BLCUT -v 3.0 -m 8 -c 16 TAU 20.0 10 3", 8, 16, "BLCUT", ParameterType::kChannel, 0, 3.0}
 };
+struct ImportExportData {
+	string input;
+	string command;
+	string path;
+	TestCrate::ModuleStatus status;
+};
+vector<ImportExportData> kImportExportCommands = {
+	{"import params.json", "import", "params.json", TestCrate::ModuleStatus::kImported},
+	{"export params.json", "export", "params.json", TestCrate::ModuleStatus::kExported}
+};
+
 
 const size_t kArgSize = 32;
 const size_t kArgMaxLength = 32;
@@ -282,6 +293,42 @@ TEST(InteractorTest, ParseWriteCommand) {
 				FAIL() << "Error: invalid parameter type of case "
 					<< i << " " << kWriteCommands[i].input;
 			}
+		}
+	}
+
+	FreeArgs(argv);
+}
+
+
+
+TEST(InteractorTest, ImportExportCommand) {
+	int argc;
+	char **argv;
+	argv = new char*[kArgSize];
+	for (size_t i = 0; i < kArgSize; ++i) {
+		argv[i] = new char[kArgMaxLength];
+	}
+
+	for (size_t i = 0; i < kImportExportCommands.size(); ++i) {
+		std::cout << "case " << i << std::endl;
+
+		Parser parser;
+		auto crate = std::make_shared<TestCrate>();
+
+		SeperateArguments(kImportExportCommands[i].input, argc, argv);
+		auto interactor = parser.Parse(argc, argv);
+
+		EXPECT_EQ(interactor->CommandName(), kImportExportCommands[i].command)
+			<< "Error: command name at " << i;
+
+		EXPECT_NO_THROW(interactor->Run(crate));
+
+		for (size_t m = 0; m < crate->ModuleNum(); ++m) {
+			EXPECT_EQ(crate->modules_[m].config_file, kImportExportCommands[i].path)
+				<< "Error: path at " << i << " module " << m;
+
+			EXPECT_EQ(crate->modules_[m].status, kImportExportCommands[i].status)
+				<< "Error: status at " << i << " module " << m;
 		}
 	}
 

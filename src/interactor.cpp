@@ -34,6 +34,10 @@ std::unique_ptr<Interactor> Interactor::CreateInteractor(const char* name) noexc
 		result = std::make_unique<ReadCommandParser>();
 	} else if (!strcmp(name, "write")) {
 		result = std::make_unique<WriteCommandParser>();
+	} else if (!strcmp(name, "import")) {
+		result = std::make_unique<ImportCommandParser>();
+	} else if (!strcmp(name, "export")) {
+		result = std::make_unique<ExportCommandParser>();
 	}
 	return result;
 }
@@ -71,7 +75,10 @@ std::string HelpCommandParser::Help() const noexcept {
 		"  help                  Display help information.\n"
 		"  boot                  Boot modules.\n"
 		"  read                  Read parameters.\n"
-		"  write                 Write parameters.\n";
+		"  write                 Write parameters.\n"
+		"  import                Import parameters.\n"
+		"  export                Export parameters.\n"
+		"  run                   Run in list mode.\n";
 	return result;
 }
 
@@ -120,8 +127,7 @@ void HelpCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 BootCommandParser::BootCommandParser() noexcept
-: CommandParser(CommandName()
-, "boot firmwares")
+: CommandParser(CommandName(), "boot firmwares")
 , config_path_("")
 , module_(kModuleNum) {
 
@@ -135,12 +141,12 @@ BootCommandParser::BootCommandParser() noexcept
 		(
 			"m,module", "Choose moudle to boot, default is all.",
 			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
-			"id"
+			"<id>"
 		)
 		(
 			"config", "Set config file path.",
 			cxxopts::value<std::string>()->default_value("config.json"),
-			"path"
+			"<file>"
 		);
 	options_.parse_positional({"module_pos"});
 	options_.positional_help("[module]");
@@ -216,8 +222,7 @@ void BootCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 ReadCommandParser::ReadCommandParser() noexcept
-: CommandParser(CommandName()
-, "read parameters")
+: CommandParser(CommandName(), "read parameters")
 , config_path_("config.json")
 , name_("")
 , module_(kModuleNum)
@@ -234,25 +239,25 @@ ReadCommandParser::ReadCommandParser() noexcept
 			"n,name",
 			"Choose parameter name.",
 			cxxopts::value<std::string>()->default_value(""),
-			"parameter"
+			"<parameter>"
 		)
 		(
 			"m,module",
 			"Choose module to read.",
 			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
-			"id"
+			"<id>"
 		)
 		(
 			"c,channel",
 			"Choose channel to read.",
 			cxxopts::value<int>()->default_value(std::to_string(kChannelNum)),
-			"id"
+			"<id>"
 		)
 		(
 			"config",
-			"Set config path.",
+			"Set config file path.",
 			cxxopts::value<std::string>()->default_value("config.json"),
-			"path"
+			"<file>"
 		)
 		(
 			"name_pos",
@@ -378,8 +383,7 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 WriteCommandParser::WriteCommandParser() noexcept
-: CommandParser(CommandName()
-, "write parameters")
+: CommandParser(CommandName(), "write parameters")
 , config_path_("config.json")
 , name_("")
 , value_("")
@@ -397,31 +401,31 @@ WriteCommandParser::WriteCommandParser() noexcept
 			"n,name",
 			"Choose parameter name.",
 			cxxopts::value<std::string>()->default_value(""),
-			"parameter"
+			"<parameter>"
 		)
 		(
 			"v,value",
 			"Set parameter value.",
 			cxxopts::value<std::string>()->default_value(""),
-			"value"
+			"<value>"
 		)
 		(
 			"m,module",
 			"Choose module to write.",
 			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
-			"id"
+			"<id>"
 		)
 		(
 			"c,channel",
 			"Choose channel to write.",
 			cxxopts::value<int>()->default_value(std::to_string(kChannelNum)),
-			"id"
+			"<id>"
 		)
 		(
 			"config",
-			"Set config path.",
+			"Set config file path.",
 			cxxopts::value<std::string>()->default_value("config.json"),
-			"path"
+			"<file>"
 		)
 		(
 			"name_pos",
@@ -527,6 +531,130 @@ void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
 		}
 	}
 }
+
+
+//-----------------------------------------------------------------------------
+// 								ImportCommandParser
+//-----------------------------------------------------------------------------
+
+ImportCommandParser::ImportCommandParser() noexcept
+: CommandParser(CommandName(), "import parameters from json file")
+, config_path_("config.json")
+, parameter_config_path_("") {
+
+	type_ = InteractorType::kImportCommandParser;
+	options_.add_options()
+		(
+			"p,path",
+			"Set parameters config file path.",
+			cxxopts::value<std::string>()->default_value(""),
+			"<file>"
+		)
+		(
+			"config",
+			"Set config file path.",
+			cxxopts::value<std::string>()->default_value("config.json"),
+			"<file>"
+		)
+		(
+			"path_pos",
+			"Set parameters config file path.",
+			cxxopts::value<std::string>()->default_value("")
+		);
+	options_.parse_positional({"path_pos"});
+	options_.positional_help("[path]");
+}
+
+
+std::string ImportCommandParser::Help() const noexcept {
+	std::string result = options_.help();
+	result += "Examples:\n"
+		"  './rxdaq import params.json' to read parameters from params.json\n";
+
+	return result;
+}
+
+
+void ImportCommandParser::Parse(int argc, char **argv) {
+	auto parse_result = options_.parse(argc, argv);
+
+	// get parameters
+	config_path_ = parse_result["config"].as<std::string>();
+
+	parameter_config_path_ = parse_result["path"].count() ?
+		parse_result["path"].as<std::string>() :
+		parse_result["path_pos"].as<std::string>();
+}
+
+
+void ImportCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->ImportParameters(parameter_config_path_);
+}
+
+
+//-----------------------------------------------------------------------------
+// 								ExportCommandParser
+//-----------------------------------------------------------------------------
+
+ExportCommandParser::ExportCommandParser() noexcept
+: CommandParser(CommandName(), "export parameters from json file")
+, config_path_("config.json")
+, parameter_config_path_("") {
+
+	type_ = InteractorType::kExportCommandParser;
+	options_.add_options()
+		(
+			"p,path",
+			"Set parameters config file path.",
+			cxxopts::value<std::string>()->default_value(""),
+			"<file>"
+		)
+		(
+			"config",
+			"Set config file path.",
+			cxxopts::value<std::string>()->default_value("config.json"),
+			"<file>"
+		)
+		(
+			"path_pos",
+			"Set parameters config file path.",
+			cxxopts::value<std::string>()->default_value("")
+		);
+	options_.parse_positional({"path_pos"});
+	options_.positional_help("[path]");
+}
+
+
+
+std::string ExportCommandParser::Help() const noexcept {
+	std::string result = options_.help();
+	result += "Examples:\n"
+		"  `./rxdaq export param.json' to export parameters to params.json\n";
+
+	return result;
+}
+
+
+void ExportCommandParser::Parse(int argc, char** argv) {
+	auto parse_result = options_.parse(argc, argv);
+
+	// get parameters
+	config_path_ = parse_result["config"].as<std::string>();
+
+	parameter_config_path_ = parse_result["path"].count() ?
+		parse_result["path"].as<std::string>() :
+		parse_result["path_pos"].as<std::string>();
+}
+
+
+void ExportCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->ExportParameters(parameter_config_path_);
+}
+
+
+//-----------------------------------------------------------------------------
+// 								related functions
+//-----------------------------------------------------------------------------
 
 std::vector<unsigned short> CreateRequestIndexes(unsigned short max_index, unsigned short reality_limit, unsigned short index) {
 	std::vector<unsigned short> result;

@@ -17,7 +17,9 @@ public:
 	enum class ModuleStatus {
 		kInitial = 0,
 		kBooted,
-		kRunning
+		kRunning,
+		kImported,
+		kExported
 	};
 
 
@@ -27,6 +29,7 @@ public:
 		unsigned short boot_pattern;
 		std::map<std::string, unsigned int> module_parameters;
 		std::map<std::string, double> channel_parameters[kChannelNum];
+		std::string config_file;
 	};
 
 
@@ -140,11 +143,24 @@ public:
 	) noexcept override;
 
 
+	/// @brief import parameters from file
+	///
+	/// @param[in] path parameter config file path
+	/// 
+	virtual void ImportParameters(const std::string &path) override;
+
+
+
+	/// @brief export parameters to file
+	///
+	/// @param[in] path parameter config file path
+	///
+	virtual void ExportParameters(const std::string &path) override;
+
+
 
 	// virtual void Run(unsigned short module_, unsigned int time_) override;
 	// virtual void EndRun(unsigned short module_) override;
-	// virtual void ImportParameters(const std::string &path_) override;
-	// virtual void ExportParameters(const std::string &path_) override;
 
 	TestModule modules_[kModuleNum];
 	bool list_;

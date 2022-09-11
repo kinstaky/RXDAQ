@@ -166,12 +166,25 @@ public:
 	);
 
 
+	/// @brief import parameters from json file
+	///
+	/// @param[in] path path to import
+	/// 
+	virtual void ImportParameters(const std::string &path);
+	
+	
+	/// @brief export parameters to json file
+	///
+	/// @param path path to export
+	/// 
+	virtual void ExportParameters(const std::string &path);
+
+
 
 
 	// virtual void StartRun(unsigned short module, unsigned int time_);
 	// virtual void EndRun(unsigned short module);
-	// virtual void ImportParameters(const std::string &path);
-	// virtual void ExportParameters(const std::string &path);
+	
 	// virtual void PrintInfo() const;
 	// virtual void SetRunConfig(const std::string &path);
 	// virtual void SetRunConfig(const std::string &path, const std::string &name, unsigned int run);
