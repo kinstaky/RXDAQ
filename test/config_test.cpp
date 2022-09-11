@@ -25,6 +25,7 @@ const std::vector<std::string> kIncompletionTestDataFiles = {
 	"empty.json",
 	"lack-crate-id.json",
 	"lack-modules.json",
+	"lack-run.json",
 	"empty-modules.json",
 	"invalid-slot.json",
 	"module-lack-ldr.json",
@@ -35,13 +36,16 @@ const std::vector<std::string> kIncompletionTestDataFiles = {
 	"template-lack-rev.json",
 	"lack-template.json",
 	"modules-size-over-range.json",
-	"slot-conflict.json"
+	"slot-conflict.json",
+	"run-lack-data-path.json",
+	"run-lack-number.json"
 };
 const std::vector<std::string> kIncompletionTestErrorMessages = {
 	"Open file \"" + kTestDataDir + "completion/not-exist.json\" failed.\n",
 	"Lack of parameter \"messageLevel\".\n",
 	"Lack of parameter \"crateId\".\n",
 	"Lack of parameter \"modules\".\n",
+	"Lack of parameter \"run\".\n",
 	"Module 0 lack of parameter \"slot\".\n",
 	"Slot (1) of module 0 is invalid(2 - 14).\n",
 	"Module 0 lack of parameter \"template\" or \"ldr\".\n",
@@ -52,7 +56,9 @@ const std::vector<std::string> kIncompletionTestErrorMessages = {
 	"Template \"100M\" lack of parameter \"rev\".\n",
 	"Template \"100M\" of module 0 doesn't exist.\n",
 	"Modules size over range(1-13).\n",
-	"Module 0 and module 1 share the same slot 2.\n"
+	"Module 0 and module 1 share the same slot 2.\n",
+	"Run lack of parameter \"dataPath\".\n",
+	"Run lack of parameter \"number\".\n"
 };
 const std::vector<std::string> kCompletionTestDataFiles = {
 	"completion.json",
@@ -173,6 +179,12 @@ TEST(ConfigTest, Correction) {
 	EXPECT_EQ(config.CrateId(), 1);
 
 	EXPECT_EQ(config.ModuleNum(), kModules.size());
+
+	EXPECT_EQ(config.RunNumber(), 10);
+
+	EXPECT_STREQ(config.RunDataPath().c_str(), "./");
+
+	EXPECT_STREQ(config.RunDataFile().c_str(), "data");
 	
 	for (unsigned short i = 0; i < config.ModuleNum(); ++i) {
 		EXPECT_EQ(config.Slot(i), kModules[i].slot)

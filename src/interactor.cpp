@@ -38,6 +38,8 @@ std::unique_ptr<Interactor> Interactor::CreateInteractor(const char* name) noexc
 		result = std::make_unique<ImportCommandParser>();
 	} else if (!strcmp(name, "export")) {
 		result = std::make_unique<ExportCommandParser>();
+	} else if (!strcmp(name, "run")) {
+		result = std::make_unique<RunCommandParser>();
 	}
 	return result;
 }
@@ -192,8 +194,7 @@ void BootCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize(config_path_);
 	if (module_ == kModuleNum) {
 		std::vector<std::thread> boot_threads;
-		// for (unsigned short i = 0; i < config.ModuleNum(); ++i) {
-		for (unsigned short i = 0; i < kModuleNum; ++i) {
+		for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
 			boot_threads.emplace_back(&Crate::Boot, crate, i, kEntireBoot);
 		}
 		for (auto &t : boot_threads) {
@@ -319,6 +320,15 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 
 
 void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize();
+	if (module_ == kModuleNum) {
+		for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
+			crate->Boot(i);
+		}
+	} else {
+		crate->Boot(module_);
+	}
+
 	if (name_.empty()) {
 		std::cout << crate->ListParameters();
 		return;
@@ -500,6 +510,16 @@ void WriteCommandParser::Parse(int argc, char **argv) {
 
 
 void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize();
+	if (module_ == kModuleNum) {
+		for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
+			crate->Boot(i);
+		}
+	} else {
+		crate->Boot(module_);
+	}
+
+
 	if (name_.empty()) {
 		std::cout << crate->ListParameters();
 		return;
@@ -569,7 +589,8 @@ ImportCommandParser::ImportCommandParser() noexcept
 std::string ImportCommandParser::Help() const noexcept {
 	std::string result = options_.help();
 	result += "Examples:\n"
-		"  './rxdaq import params.json' to read parameters from params.json\n";
+		"  './rxdaq import params.json' to read parameters from params.json\n"
+		"Remember that --config can be used to choose path of json config file.\n";
 
 	return result;
 }
@@ -588,6 +609,10 @@ void ImportCommandParser::Parse(int argc, char **argv) {
 
 
 void ImportCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize();
+	for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
+		crate->Boot(i);
+	}
 	crate->ImportParameters(parameter_config_path_);
 }
 
@@ -629,7 +654,8 @@ ExportCommandParser::ExportCommandParser() noexcept
 std::string ExportCommandParser::Help() const noexcept {
 	std::string result = options_.help();
 	result += "Examples:\n"
-		"  `./rxdaq export param.json' to export parameters to params.json\n";
+		"  `./rxdaq export param.json' to export parameters to params.json\n"
+		"Remember that --config can be used to choose path of json config file.\n";
 
 	return result;
 }
@@ -648,8 +674,108 @@ void ExportCommandParser::Parse(int argc, char** argv) {
 
 
 void ExportCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize();	
+	for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
+		crate->Boot(i);
+	}
 	crate->ExportParameters(parameter_config_path_);
 }
+
+
+//-----------------------------------------------------------------------------
+// 								RunCommandParser
+//-----------------------------------------------------------------------------
+
+RunCommandParser::RunCommandParser() noexcept
+: CommandParser(CommandName(), "run in list mode")
+, config_path_("config.json")
+, module_(kModuleNum)
+, seconds_(0)
+, run_(0) {
+
+	type_ = InteractorType::kRunCommandParser;
+	options_.add_options()
+		(
+			"m,module",
+			"Set the module to run, default is all.",
+			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
+			"<id>"
+		)
+		(
+			"t,time",
+			"Set the run time, default is 0(infinite).",
+			cxxopts::value<int>()->default_value("0"),
+			"<seconds>"
+		)
+		(
+			"r,run",
+			"Set the run number, default is read from config file.",
+			cxxopts::value<int>()->default_value("-1"),
+			"<number>"
+		)
+		(
+			"config",
+			"Set the config file path.",
+			cxxopts::value<std::string>()->default_value("config.json"),
+			"<file>"
+		)
+		(
+			"module_pos",
+			"Set the module to run.",
+			cxxopts::value<int>()->default_value(std::to_string(kModuleNum))
+		)
+		(
+			"time_pos",
+			"Set the run time.",
+			cxxopts::value<int>()->default_value("0")
+		)
+		(
+			"run_pos",
+			"Set the run number.",
+			cxxopts::value<int>()->default_value("-1")
+		);
+	options_.parse_positional({"module_pos", "time_pos", "run_pos"});
+	options_.positional_help("[module] [time] [run]");
+}
+
+std::string RunCommandParser::Help() const noexcept {
+	std::string result = options_.help();
+	result += "Examples:\n"
+		"  'run' to run all modules in list mode.\n"
+		"  'run 0' to run module 0 in list mode.\n"
+		"  'run 13 10' to run all modules in list mode for 10 seconds.\n"
+		"  'run 0 60 3' to run module 0 in list mode for 60 seconds as run 3.\n"
+		"  'run -m 0 -t 60 -r 3' to do the same thing with name arguments as above.\n"
+		"  'run -r 4' to run all modules in list mode as run 4.\n"
+		"Press Ctrl+C to stop before reaching the finish time.\n"
+		"Remember that --config can be used to choose path of json config file.\n";
+	return result;
+}
+
+
+void RunCommandParser::Parse(int argc, char **argv) {
+	auto parse_result = options_.parse(argc, argv);
+
+	// get parameters
+	config_path_ = parse_result["config"].as<std::string>();
+
+	module_ = parse_result["module"].count() ? 
+		parse_result["module"].as<int>() :
+		parse_result["module_pos"].as<int>();
+
+	seconds_ = parse_result["time"].count() ?
+		parse_result["time"].as<int>() :
+		parse_result["time_pos"].as<int>();
+
+	run_ = parse_result["run"].count() ?
+		parse_result["run"].as<int>() :
+		parse_result["run_pos"].as<int>();
+}
+
+void RunCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->StartRun(module_, seconds_, run_);
+}
+
 
 
 //-----------------------------------------------------------------------------

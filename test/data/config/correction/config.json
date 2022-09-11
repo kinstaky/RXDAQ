@@ -69,5 +69,10 @@
 			"trig": "trig5"
 		}
 
-	]
+	],
+	"run": {
+		"dataPath": "./",
+		"dataFile": "data",
+		"number": 10
+	}
 }

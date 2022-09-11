@@ -30,7 +30,6 @@ struct HelpData {
 	string input;
 	string command;
 };
-// input commands and options
 vector<HelpData> kHelpCommands = {
 	{"help", "help"},
 	{"help help", "help"},
@@ -38,6 +37,7 @@ vector<HelpData> kHelpCommands = {
 	{"help read", "help"},
 	{"help write", "help"}
 };
+
 struct BootData {
 	string input;
 	unsigned short module;
@@ -51,6 +51,7 @@ vector<BootData> kBootCommands = {
 	{"boot -m 13", 13},
 	{"boot -m 0 2", 0}
 };
+
 struct WriteData {
 	string input;
 	unsigned short module;
@@ -85,6 +86,7 @@ vector<WriteData> kWriteCommands = {
 	{"write --value 16.0 --name BLCUT --module 0", 0, 16, "BLCUT", ParameterType::kChannel, 0, 16.0},
 	{"write -n BLCUT -v 3.0 -m 8 -c 16 TAU 20.0 10 3", 8, 16, "BLCUT", ParameterType::kChannel, 0, 3.0}
 };
+
 struct ImportExportData {
 	string input;
 	string command;
@@ -93,7 +95,26 @@ struct ImportExportData {
 };
 vector<ImportExportData> kImportExportCommands = {
 	{"import params.json", "import", "params.json", TestCrate::ModuleStatus::kImported},
-	{"export params.json", "export", "params.json", TestCrate::ModuleStatus::kExported}
+	{"import --path params.json other", "import", "params.json", TestCrate::ModuleStatus::kImported},
+	{"export params.json", "export", "params.json", TestCrate::ModuleStatus::kExported},
+	{"export -p params.json other", "export", "params.json", TestCrate::ModuleStatus::kExported}
+};
+
+struct RunData {
+	string input;
+	unsigned short module;
+	unsigned int seconds;
+	int run_number;
+};
+vector<RunData> kRunCommands = {
+	{"run", 13, 0, -1},
+	{"run 0", 0, 0, -1},
+	{"run 0 20", 0, 20, -1},
+	{"run 0 60 3", 0, 60, 3},
+	{"run --run 4", 13, 0, 4},
+	{"run -r 5 -t 100 13 20 0", 13, 100, 5},
+	{"run --time 20 --module 2 4 2 4", 2, 20, 4},
+	{"run -t 5 -m 4 -r 8 6 6 6", 4, 5, 8}
 };
 
 
@@ -329,6 +350,45 @@ TEST(InteractorTest, ImportExportCommand) {
 
 			EXPECT_EQ(crate->modules_[m].status, kImportExportCommands[i].status)
 				<< "Error: status at " << i << " module " << m;
+		}
+	}
+
+	FreeArgs(argv);
+}
+
+
+TEST(InteractorTest, RunCommand) {
+	int argc;
+	char **argv;
+	argv = new char*[kArgSize];
+	for (size_t i = 0; i < kArgSize; ++i) {
+		argv[i] = new char[kArgMaxLength];
+	}
+
+	for (size_t i = 0; i < kRunCommands.size(); ++i) {
+		std::cout << "case " << i << std::endl;
+
+		Parser parser;
+		auto crate = std::make_shared<TestCrate>();
+
+		SeperateArguments(kRunCommands[i].input, argc, argv);
+		auto interactor = parser.Parse(argc, argv);
+
+		EXPECT_NO_THROW(interactor->Run(crate));
+
+		EXPECT_EQ(crate->run_time_, kRunCommands[i].seconds)
+			<< "Error: running time in case " << i;
+
+		EXPECT_EQ(crate->run_number_, kRunCommands[i].run_number)
+			<< "Error: run number in case " << i;
+
+		auto modules = CreateRequestIndexes(
+			kModuleNum, crate->ModuleNum(), kRunCommands[i].module
+		);
+
+		for (const auto &m : modules) {
+			EXPECT_EQ(crate->modules_[m].status, TestCrate::ModuleStatus::kRunning)
+				<< "Error: Module status in case " << i << " module " << m;
 		}
 	}
 

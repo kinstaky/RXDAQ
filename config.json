@@ -7,30 +7,43 @@
 			"rev": 15,
 			"rate": 100,
 			"bits": 14,
+			"sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/syspixie16_revfpku_adc100hz_r44498.bin",
+			"fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/fippixie16_revfpku_14b100m_r39574.bin",
 	    	"ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.ldr",
-	    	"par": "/home/test/Documents/PKUXIADAQ/parset/crates.set",
 	    	"var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.var",
-      		"fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/fippixie16_revfpku_14b100m_r39574.bin",
-      		"sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/syspixie16_revfpku_adc100hz_r44498.bin",
-      		"trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.lst"
+      		"trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.lst",
+			"par": "/home/test/Tools/RXDAQ/logic.json"
+
 		},
 		{
 			"name": "250M",
 			"rev": 15,
 			"rate": 250,
 			"bits": 14,
-			"ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.ldr",
-			"par": "/home/test/Documents/PKUXIADAQ/parset/crates.set",
-			"var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.var",
-			"fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/fippixie16_revfpku_14b250m_r45226.bin",
 			"sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/syspixie16_revfpku_adc250hz_r44499.bin",
-			"trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.lst"
+			"fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/fippixie16_revfpku_14b250m_r45226.bin",
+			"ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.ldr",
+			"var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.var",
+			"trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.lst",
+			"par": "/home/test/Tools/RXDAQ/logic.json"
+		},
+		{
+			"name": "500M",
+			"rev": 15,
+			"rate": 500,
+			"bits": 14,
+			"sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/syspixie16_revfpku_adc500hz_r44500.bin",
+			"fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/fippixie16_revfgeneral_14b500m_r34687.bin",
+			"ldr" : "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/Pixie16DSP_revfpku_14b500m_r43351.ldr",
+			"var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/Pixie16DSP_revfpku_14b500m_r43351.var",
+			"trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/Pixie16DSP_revfpku_14b500m_r43351.lst",
+			"par": "/home/test/Tools/RXDAQ/logic.json"
 		}
 	],
 	"modules": [
 		{
 			"slot": 2,
-			"template": "100M"
+			"template": "500M"
 		},
 		{
 			"slot": 3,
@@ -42,7 +55,12 @@
 		},
 		{
 			"slot": 5,
-			"template": "250M"
+			"template": "100M"
 		}
-	]
+	],
+	"run": {
+		"dataPath": "./",
+		"dataFile": "data",
+		"number": 500
+	}
 }

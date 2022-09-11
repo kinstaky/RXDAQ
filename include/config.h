@@ -31,6 +31,13 @@ public:
 	void ReadFromFile(const std::string &file_name);
 
 
+	/// @brief write config to file
+	///
+	/// @param[in] file_name name of the config file
+	///
+	void WriteToFile(const std::string &file_name);
+
+
 	/// @brief get message level
 	///
 	/// @returns message level
@@ -165,6 +172,64 @@ public:
 	}
 
 
+	//-------------------------------------------------------------------------
+	// 								run config
+	//-------------------------------------------------------------------------
+
+	/// @brief run number
+	///
+	/// @returns run number
+	///
+	inline unsigned int RunNumber() const noexcept {
+		return run_information_.run_number;
+	}
+
+
+	/// @brief set run number
+	///
+	/// @param[in] run_number run number for next run  
+	///
+	inline void SetRunNumber(unsigned int run_number) noexcept {
+		run_information_.run_number = run_number;
+	}
+
+
+	/// @brief get run data path
+	///
+	/// @returns run data path
+	/// 
+	inline std::string RunDataPath() const noexcept {
+		return run_information_.data_path;
+	}
+
+
+	/// @brief set run data path
+	///
+	/// @param[in] path run data path
+	///
+	inline void SetRunDataPath(const std::string &path) noexcept {
+		run_information_.data_path = path;
+	}
+
+
+	/// @brief get run data file name prefix
+	///
+	/// @returns run data file name prefix
+	/// 
+	inline std::string RunDataFile() const noexcept {
+		return run_information_.data_file;
+	}
+
+
+	/// @brief set run data file name prefix
+	///
+	/// @param[in] prefix run data file name prefix
+	///
+	inline void SetRunDataFile(const std::string &prefix) noexcept {
+		run_information_.data_file = prefix;
+	}
+	
+
 	// /// @brief get the crate information in string
 	// ///
 	// /// @returns crate information
@@ -172,6 +237,24 @@ public:
 	// std::string CrateInformationString() const;
 
 private:
+
+	// module information
+	struct ModuleInfo {
+		unsigned short slot;								// physical slot
+		nlohmann::json *boot_template;						// boot template
+		std::map<std::string, std::string> boot_files;		// boot files
+		unsigned short revision;							// module revision
+		unsigned short rate;								// module sampling rate
+		unsigned short bits;								// module ADC bits
+		// unsigned int ModSerNum;							// module serial number
+	};
+	
+	// run information
+	struct RunInfo {
+		unsigned int run_number;
+		std::string data_path;
+		std::string data_file;
+	};
 
 	/// @brief get boot file path of module by index and boot file kind
 	///
@@ -185,32 +268,25 @@ private:
 	// parameter names in top level
 	static const std::string top_level_parameters_[];
 	// parameter names in template
-	static const std::string boot_files_[];					// boot files
-	static const std::string firmware_versions_[];			// firmware version
+	static const std::string boot_files_[];
+	static const std::string firmware_versions_[];
 	// parameter names in crate
 	static const std::string crate_parameters_[];
-
+	// parameter names in run
+	static const std::string run_parameters_[];
 	
 	// crate information
 	std::string message_level_;
 	unsigned short crate_id_;
 	unsigned short module_num_;
 
-
 	// module information
-	struct ModuleInfo {
-		unsigned short slot;								// physical slot
-		nlohmann::json *boot_template;						// boot template
-		std::map<std::string, std::string> boot_files;		// boot files
-		unsigned short revision;							// module revision
-		unsigned short rate;								// module sampling rate
-		unsigned short bits;								// module ADC bits
-		// unsigned int ModSerNum;							// module serial number
-	} module_information_[kModuleNum];						// index of module, different from the slot id
-
-
+	ModuleInfo module_information_[kModuleNum];
 	// module boot templates
 	std::map<std::string, nlohmann::json> boot_templates_;
+
+	// run information
+	RunInfo run_information_;
 };
 
 

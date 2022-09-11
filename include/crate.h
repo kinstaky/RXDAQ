@@ -79,6 +79,12 @@ public:
 	///
 	virtual void Initialize(const std::string &config_path = "");
 
+
+	virtual void LoadFirmware(unsigned short module_id);
+
+	virtual void BootCrate(bool fast);
+
+	// virtual void Boot(unsigned short module_id, bool fast);
 	
 	/// @brief boot modules in crate
 	///
@@ -180,10 +186,24 @@ public:
 	virtual void ExportParameters(const std::string &path);
 
 
+	/// @brief start list mode run
+	///
+	/// @param[in] module_id module to run in list mode 
+	/// @param[in] seconds seconds to run, 0 for infinite time
+	/// @param[in] run run number, -1 to read from config file
+	///
+	virtual void StartRun(
+		unsigned short module_id,
+		unsigned int seconds,
+		int run
+	);
 
 
-	// virtual void StartRun(unsigned short module, unsigned int time_);
-	// virtual void EndRun(unsigned short module);
+	/// @brief stop list mode run
+	///
+	/// @param[in] module_id module to stop
+	///
+	virtual void StopRun(unsigned short module_id);
 	
 	// virtual void PrintInfo() const;
 	// virtual void SetRunConfig(const std::string &path);
@@ -205,7 +225,17 @@ public:
 	// } runConfig;
 
 private:
-	
+	/// @brief read list mode data from hardware to binary files
+	///
+	/// @param[in] module module to read from
+	/// @param[in] fout output stream to write to
+	/// @param[in] threshold threshold of buffer, write if over this threshold
+	///
+	void ReadListModeData(
+		xia::pixie::crate::module_handle &module,
+		std::ofstream &fout,
+		unsigned int threshold
+	);
 
 
 	// xia crate, the lower level compoment
@@ -222,7 +252,6 @@ private:
 	std::string config_path_;
 	Config config_;
 
-	// void readListData(xia::pixie::crate::module_handle &module_, std::ofstream &fout, unsigned int threshold);
 };
 
 }	// namespace rxdaq

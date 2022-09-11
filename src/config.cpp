@@ -11,7 +11,8 @@ namespace rxdaq {
 const std::string Config::top_level_parameters_[] = {
 	"messageLevel",
 	"crateId",
-	"modules"
+	"modules",
+	"run"
 };
 
 const std::string Config::boot_files_[] = {
@@ -29,6 +30,11 @@ const std::string Config::firmware_versions_[] = {
 	"bits",						// ADC bits
 };
 
+const std::string Config::run_parameters_[] = {
+	"dataPath",
+	"dataFile",
+	"number"
+};
 
 
 void Config::ReadFromFile(const std::string &file_name) {
@@ -92,8 +98,6 @@ void Config::ReadFromFile(const std::string &file_name) {
 	if (module_num_ > kModuleNum) {
 		throw std::runtime_error("Modules size over range(1-13).\n");
 	}
-
-
 
 	// record module information
 	int is = 0;
@@ -171,7 +175,55 @@ void Config::ReadFromFile(const std::string &file_name) {
 		}
 		++is;
 	}
+
+
+	// check run config
+	for (const auto &name : run_parameters_) {
+		if (json["run"][name].empty()) {
+			throw std::runtime_error("Run lack of parameter \"" + name + "\".\n");
+		}
+	}
+	run_information_ = {
+		json["run"]["number"],
+		json["run"]["dataPath"],
+		json["run"]["dataFile"]
+	};
+	if (run_information_.data_path.back() != '/') {
+		run_information_.data_path += "/";
+	}
+
 	return;
+}
+
+
+
+void Config::WriteToFile(const std::string &file_name) {
+	// file to write
+	std::ofstream fout(file_name);
+	if (!fout.good()) {
+		throw std::runtime_error("Open file \"" + file_name + "\" failed.\n");
+	}
+
+	nlohmann::json json;
+	json["messageLevel"] = message_level_;
+	json["crateId"] = crate_id_;
+	for (const auto &[key, value] : boot_templates_) {
+		json["templates"].push_back(key);
+	}
+	for (unsigned short i = 0; i < module_num_; ++i) {
+		ModuleInfo &info = module_information_[i];
+		nlohmann::json module;
+		module["slot"] = info.slot;
+		if (info.boot_template) {
+			module["template"] = info.boot_template->at("name"); 
+		}
+		for (const auto &[key, file] : info.boot_files) {
+			module[key] = file;
+		}
+		json["modules"].push_back(module);
+	}
+
+	fout << json.dump(4) << std::endl;
 }
 
 

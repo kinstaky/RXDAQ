@@ -5,7 +5,8 @@
 namespace rxdaq {
 
 
-TestCrate::TestCrate() noexcept {
+TestCrate::TestCrate() noexcept
+: list_(false), run_time_(0), run_number_(0) {
 	// initialize virtual modules
 	for (unsigned short i = 0; i < kModuleNum; ++i) {
 		modules_[i].status = ModuleStatus::kInitial;
@@ -94,22 +95,18 @@ void TestCrate::ExportParameters(const std::string &path) {
 
 
 
-// void TestCrate::Run(unsigned short module_, unsigned int time_) {
-// 	std::stringstream ss;
-// 	ss << "TestCrate::Run(";
-// 	if (module_ == 16) ss << "All Modules";
-// 	else ss << "Module " << module_;
-// 	ss << ", " << time_ << " s";
-// 	ss << ")";
-// 	std::cout << ss.str() << std::endl;
-// 	std::cout << "runconfig: " << runConfig.configFile << std::endl;
-// 	std::cout << "data:" << std::endl;
-// 	std::cout << "  path " << runConfig.dataPath << std::endl;
-// 	std::cout << "  file " << runConfig.dataFileName << std::endl;
-// 	std::cout << "  run  " << runConfig.run << std::endl;
-// 	std::cout << runConfig.js.dump(2) << std::endl;
-// 	return;
-// }
+void TestCrate::StartRun(unsigned short module, unsigned int seconds, int run) {
+	run_time_ = seconds;
+	run_number_ = run;
+	if (module == kModuleNum) {
+		for (unsigned short m = 0; m < ModuleNum(); ++m) {
+			modules_[m].status = ModuleStatus::kRunning;
+		}
+	} else {
+		modules_[module].status = ModuleStatus::kRunning;
+	}
+	return;
+}
 
 
 

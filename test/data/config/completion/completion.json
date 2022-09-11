@@ -20,5 +20,10 @@
 			"slot": 2,
 			"template": "100M"
 		}
-	]
+	],
+	"run": {
+		"dataPath": "./",
+		"dataFile": "data",
+		"number": 500
+	}
 }

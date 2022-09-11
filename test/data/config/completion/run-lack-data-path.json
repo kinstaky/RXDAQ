@@ -17,9 +17,12 @@
 	],
 	"modules": [
 		{
-			"slot": 1,
+			"slot": 2,
 			"template": "100M"
 		}
 	],
-	"run": ""
+	"run": {
+		"number": 4,
+		"dataFile": ""
+	}
 }

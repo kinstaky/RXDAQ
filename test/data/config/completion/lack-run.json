@@ -1,8 +1,5 @@
 {	
 	"messageLevel": "debug",
 	"crateId": 0,
-	"modules": [
-		{}
-	],
-	"run": ""
+	"modules": ""
 }

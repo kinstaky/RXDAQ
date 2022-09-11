@@ -158,12 +158,24 @@ public:
 	virtual void ExportParameters(const std::string &path) override;
 
 
+	/// @brief start list mode run
+	///
+	/// @param[in] module module to run in list mode 
+	/// @param[in] seconds seconds to run, 0 for infinite time
+	/// @param[in] run run number, -1 to read from config file
+	///
+	virtual void StartRun(
+		unsigned short module,
+		unsigned int seconds,
+		int run
+	) override;
 
-	// virtual void Run(unsigned short module_, unsigned int time_) override;
 	// virtual void EndRun(unsigned short module_) override;
 
 	TestModule modules_[kModuleNum];
 	bool list_;
+	unsigned int run_time_;
+	int run_number_;
 };
 
 }	// namespace rxdaq

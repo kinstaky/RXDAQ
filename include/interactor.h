@@ -140,7 +140,7 @@ public:
 
 	/// @brief  get the command name
 	///
-	/// @returns command name `help`
+	/// @returns command name 'help'
 	///
 	inline virtual std::string CommandName() const noexcept override {
 		return std::string("help");
@@ -149,7 +149,7 @@ public:
 
 	/// @brief get help information
 	///
-	/// @return help information
+	/// @returns help information
 	///
 	virtual std::string Help() const noexcept override;
 
@@ -193,7 +193,7 @@ public:
 
 	/// @brief  get the command name
 	///
-	/// @returns command name `boot`
+	/// @returns command name 'boot'
 	///
 	inline virtual std::string CommandName() const noexcept override {
 		return std::string("boot");
@@ -202,7 +202,7 @@ public:
 
 	/// @brief get help information
 	///
-	/// @return help information
+	/// @returns help information
 	///
 	virtual std::string Help() const noexcept override;
 
@@ -269,7 +269,7 @@ public:
 
 	/// @brief  get the command name
 	///
-	/// @returns command name `boot`
+	/// @returns command name 'boot'
 	///
 	inline virtual std::string CommandName() const noexcept override {
 		return "read";
@@ -278,7 +278,7 @@ public:
 
 	/// @brief get help information
 	///
-	/// @return help information
+	/// @returns help information
 	///
 	virtual std::string Help() const noexcept override;
 
@@ -322,7 +322,7 @@ public:
 
 	/// @brief  get the command name
 	///
-	/// @returns command name `boot`
+	/// @returns command name 'boot'
 	///
 	inline virtual std::string CommandName() const noexcept override {
 		return "write";
@@ -331,7 +331,7 @@ public:
 
 	/// @brief get help information
 	///
-	/// @return help information
+	/// @returns help information
 	///
 	virtual std::string Help() const noexcept override;
 
@@ -376,7 +376,7 @@ public:
 
 	/// @brief  get the command name
 	///
-	/// @returns command name `boot`
+	/// @returns command name 'boot'
 	///
 	inline virtual std::string CommandName() const noexcept override {
 		return "import";
@@ -385,7 +385,7 @@ public:
 
 	/// @brief get help information
 	///
-	/// @return help information
+	/// @returns help information
 	///
 	virtual std::string Help() const noexcept override;
 
@@ -427,7 +427,7 @@ public:
 
 	/// @brief  get the command name
 	///
-	/// @returns command name `boot`
+	/// @returns command name 'boot'
 	///
 	inline virtual std::string CommandName() const noexcept override {
 		return "export";
@@ -436,7 +436,7 @@ public:
 
 	/// @brief get help information
 	///
-	/// @return help information
+	/// @returns help information
 	///
 	virtual std::string Help() const noexcept override;
 
@@ -461,6 +461,58 @@ private:
 
 };
 
+
+
+/// This class parse the options of subcommand run and run in list mode.
+class RunCommandParser : public CommandParser {
+public:
+
+	/// @brief constructor
+	///
+	RunCommandParser() noexcept;
+
+
+	/// @brief default destructor
+	///
+	virtual ~RunCommandParser() = default;
+
+
+	/// @brief get command name
+	///
+	/// @returns command name 'run'
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return "run";
+	}
+
+
+	/// @brief get help information
+	///
+	/// @returns help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get read information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv arguments list
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and read parameters
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	int module_;
+	int seconds_;
+	int run_;
+};
 
 
 /// @brief create vector of indexes for modules or channels
