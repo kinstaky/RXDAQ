@@ -80,21 +80,38 @@ public:
 	virtual void Initialize(const std::string &config_path = "");
 
 
+	/// @brief load the firmware
+	///
+	/// @param[in] module_id module to load
+	/// 
 	virtual void LoadFirmware(unsigned short module_id);
 
-	virtual void BootCrate(bool fast);
 
-	// virtual void Boot(unsigned short module_id, bool fast);
-	
-	/// @brief boot modules in crate
+	/// @brief boot one module
 	///
 	/// @param[in] module_id module to boot
-	/// @param[in] boot_pattern boot pattern, kFastBoot or kEntireBoot
+	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
+	/// 
+	virtual void BootModule(unsigned short module_id, bool fast = true);
+
+
+	/// @brief boot modules
 	///
-	/// @throws UserError if firmware version of config error
-	/// @throws XiaError if boot failed
+	/// @param[in] module_id module to boot 
+	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
 	///
-	virtual void Boot(unsigned short module_id, unsigned short boot_pattern = kFastBoot);
+	virtual void Boot(unsigned short module_id, bool fast = true);
+	
+	
+	// /// @brief boot modules in crate
+	// ///
+	// /// @param[in] module_id module to boot
+	// /// @param[in] boot_pattern boot pattern, kFastBoot or kEntireBoot
+	// ///
+	// /// @throws UserError if firmware version of config error
+	// /// @throws XiaError if boot failed
+	// ///
+	// virtual void Boot(unsigned short module_id, unsigned short boot_pattern = kFastBoot);
 
 
 	//-------------------------------------------------------------------------

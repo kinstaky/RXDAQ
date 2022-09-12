@@ -156,70 +156,92 @@ void Crate::LoadFirmware(unsigned short module_id) {
 }
 
 
-// void Crate::Boot(unsigned short module_id, bool fast) {
-// 	// load firmware
-// 	if (module_id == kModuleNum) {
-// 		std::vector<std::thread> threads;
-// 		for (unsigned short i = 0; i < ModuleNum(); ++i) {
-// 			threads.emplace_back(&Crate::LoadFirmware, this, i);
-// 		}
-// 		for (auto &t : threads) {
-// 			t.join();
-// 		}
-// 	} else {
-// 		LoadFirmware(module_id);
-// 	}
-// 	BootCrate(fast);
-// }
-
-
-void Crate::BootCrate(bool fast) {
+void Crate::BootModule(unsigned short module_id, bool fast) {
 	std::cout << message_(MsgLevel::kDebug)
-		<< "Crate::BootCrate(" << fast << ")\n";
+		<< "Crate::BootModule(" << module_id << ", " << fast << ").\n";
 
-	xia_crate_.ready();
+	LoadFirmware(module_id);
 	
-	if (fast) {
-		xia_crate_.boot(false);
+	xia::pixie::crate::module_handle module(
+		xia_crate_, module_id, xia::pixie::crate::module_handle::present
+	);
+	
+	if (!fast || !module->online()) {
+		module->boot();
+	}
+}
+
+void Crate::Boot(unsigned short module_id, bool fast) {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::Boot(" << module_id << ", " << fast << ").\n";
+
+	// load firmware
+	if (module_id == kModuleNum) {
+		std::vector<std::thread> threads;
+		for (unsigned short i = 0; i < ModuleNum(); ++i) {
+			threads.emplace_back(&Crate::BootModule, this, i, fast);
+		}
+		for (auto &t : threads) {
+			t.join();
+		}
 	} else {
-		xia_crate_.boot(true);
+		BootModule(module_id, fast);
+	}
+	if (!fast) {
 		ImportParameters(config_.Par(0));
 	}
 }
 
 
-// The function is edited from PixieRegisterFirmware, but the origin function
-// create the firmware for twice. So I edit it and create only once.
-void Crate::Boot(unsigned short module_id, unsigned short boot_pattern) {
-	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot(" << module_id
-		<< ", 0x" << std::hex << boot_pattern << std::dec << ")\n"; 
+// void Crate::BootCrate(bool fast) {
+// 	std::cout << message_(MsgLevel::kDebug)
+// 		<< "Crate::BootCrate(" << fast << ")\n";
+
+// 	xia_crate_.ready();
+	
+// 	if (fast) {
+// 		xia_crate_.boot(false);
+// 	} else {
+// 		xia_crate_.boot(true);
+// 		ImportParameters(config_.Par(0));
+// 	}
+// }
 
 
-	LoadFirmware(module_id);
+// // The function is edited from PixieRegisterFirmware, but the origin function
+// // create the firmware for twice. So I edit it and create only once.
+// void Crate::Boot(unsigned short module_id, unsigned short boot_pattern) {
+// 	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot(" << module_id
+// 		<< ", 0x" << std::hex << boot_pattern << std::dec << ")\n"; 
 
-	xia::pixie::crate::crate::user user(xia_crate_);
-	// check module firmware information before boot
-	xia::pixie::module::module &module = *(xia_crate_.modules[module_id]);
 
-	const int kBOOT_COMFPGA = 0x1;
-	const int kBOOT_SPFPGA = 0x2;
-	const int kBOOT_DSPCODE = 0x4;
+// 	LoadFirmware(module_id);
 
-	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot: booting module...\n";
+// 	xia::pixie::crate::crate::user user(xia_crate_);
+// 	// check module firmware information before boot
+// 	xia::pixie::module::module &module = *(xia_crate_.modules[module_id]);
 
-	// now boot module
-	module.probe();
-	module.boot(
-		boot_pattern & kBOOT_COMFPGA,
-		boot_pattern & kBOOT_SPFPGA,
-		boot_pattern & kBOOT_DSPCODE
-	);
+// 	const int kBOOT_COMFPGA = 0x1;
+// 	const int kBOOT_SPFPGA = 0x2;
+// 	const int kBOOT_DSPCODE = 0x4;
 
-	// ImportParameters(config_.Par(module_id));
+// 	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot: booting module...\n";
 
-	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot() finish.\n";
-	return;
-}
+// 	// now boot module
+// 	module.probe();
+// 	module.boot(
+// 		boot_pattern & kBOOT_COMFPGA,
+// 		boot_pattern & kBOOT_SPFPGA,
+// 		boot_pattern & kBOOT_DSPCODE
+// 	);
+
+	// if (boot_pattern & kBOOT_DSPPAR) {
+	// 	ImportParameters(config_.Par(module_id));
+	// }
+
+// 	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot() finish.\n";
+// 	return;
+// }
 
 
 //-----------------------------------------------------------------------------
@@ -309,8 +331,8 @@ void Crate::WriteParameter(
 	unsigned short module
 ) {
 	std::cout << message_(MsgLevel::kDebug)
-		<< "Crate::WriteModuleParameter("  << name << ", " << module
-		<< ", " << value <<  ")\n";
+		<< "Crate::WriteModuleParameter("  << name << ", " << value
+		<< ", " << module <<  ")\n";
 
 	xia_crate_.ready();
 	bool bcast;
@@ -340,8 +362,8 @@ void Crate::WriteParameter(
 ) {
 
 	std::cout << message_(MsgLevel::kDebug)
-		<< "Crate::WriteChannelParameter(" << name << ", " << module << ", "
-		<< channel << ", " << value << ")\n";
+		<< "Crate::WriteChannelParameter(" << name << ", " << value << ", "
+		<< module << ", " << channel << ")\n";
 	xia_crate_.ready();
 	xia::pixie::crate::module_handle module_handler(xia_crate_, module);
 	module_handler->write(name, channel, value);

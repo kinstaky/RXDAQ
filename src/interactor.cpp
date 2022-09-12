@@ -192,17 +192,19 @@ void BootCommandParser::Parse(int argc, char **argv) {
 
 void BootCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize(config_path_);
-	if (module_ == kModuleNum) {
-		std::vector<std::thread> boot_threads;
-		for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
-			boot_threads.emplace_back(&Crate::Boot, crate, i, kEntireBoot);
-		}
-		for (auto &t : boot_threads) {
-			t.join();
-		}
-	} else {
-		crate->Boot(module_, kEntireBoot);
-	}
+	crate->Boot(module_, false);
+
+	// if (module_ == kModuleNum) {
+	// 	std::vector<std::thread> boot_threads;
+	// 	for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
+	// 		boot_threads.emplace_back(&Crate::Boot, crate, i, kEntireBoot);
+	// 	}
+	// 	for (auto &t : boot_threads) {
+	// 		t.join();
+	// 	}
+	// } else {
+	// 	crate->Boot(module_, kEntireBoot);
+	// }
 	return;
 }
 
@@ -321,13 +323,7 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 
 void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	if (module_ == kModuleNum) {
-		for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
-			crate->Boot(i);
-		}
-	} else {
-		crate->Boot(module_);
-	}
+	crate->Boot(module_, true);
 
 	if (name_.empty()) {
 		std::cout << crate->ListParameters();
@@ -511,13 +507,7 @@ void WriteCommandParser::Parse(int argc, char **argv) {
 
 void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	if (module_ == kModuleNum) {
-		for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
-			crate->Boot(i);
-		}
-	} else {
-		crate->Boot(module_);
-	}
+	crate->Boot(module_, true);
 
 
 	if (name_.empty()) {
@@ -610,9 +600,7 @@ void ImportCommandParser::Parse(int argc, char **argv) {
 
 void ImportCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
-		crate->Boot(i);
-	}
+	crate->Boot(crate->ModuleNum(), true);
 	crate->ImportParameters(parameter_config_path_);
 }
 
@@ -675,9 +663,7 @@ void ExportCommandParser::Parse(int argc, char** argv) {
 
 void ExportCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();	
-	for (unsigned short i = 0; i < crate->ModuleNum(); ++i) {
-		crate->Boot(i);
-	}
+	crate->Boot(crate->ModuleNum(), true);
 	crate->ExportParameters(parameter_config_path_);
 }
 
