@@ -872,21 +872,7 @@ void RunCommandParser::Run(std::shared_ptr<Crate> crate) {
 
 
 
-//-----------------------------------------------------------------------------
-// 								related functions
-//-----------------------------------------------------------------------------
 
-std::vector<unsigned short> CreateRequestIndexes(unsigned short max_index, unsigned short reality_limit, unsigned short index) {
-	std::vector<unsigned short> result;
-	if (index == max_index) {
-		for (unsigned short i = 0; i < reality_limit; ++i) {
-			result.push_back(i);
-		}
-	} else {
-		result.push_back(index);
-	}
-	return result;
-};
 
 
 };	// namespace rxdaq

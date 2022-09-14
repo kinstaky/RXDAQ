@@ -7,6 +7,7 @@ service ControlCrate {
 	rpc Boot (BootRequest) returns (EmptyReply) {}
 	rpc ReadParameter (ReadRequest) returns (ReadReply) {}
 	rpc WriteParameter (WriteRequest) returns (EmptyReply) {}
+	// rpc Run (RunRequest) returns (RunReply) {}
 }
 
 enum ExceptionType {

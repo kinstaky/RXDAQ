@@ -539,18 +539,6 @@ private:
 };
 
 
-/// @brief create vector of indexes for modules or channels
-///
-/// @param[in] max_index maximum index of the vector 
-/// @param[in] reality_limit reality limit of the vector size
-/// @param[in] index if index is equal to max_index, create the list from 0
-///		to reality limit, otherwise create a vector with only this index 
-/// @returns vector of the indexes
-///
-/// @relates CommandParser
-///
-std::vector<unsigned short> CreateRequestIndexes(unsigned short max_index, unsigned short reality_limit, unsigned short index);
-
 
 }		// namespace rxdaq
 

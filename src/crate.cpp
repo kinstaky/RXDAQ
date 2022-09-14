@@ -1,15 +1,12 @@
-// #include <fstream>
-// #include <iomanip>
-// #include <thread>
-// #include <vector>
+#include <vector>
+#include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #include "pixie/error.hpp"
 
 #include "include/crate.h"
 #include "include/error.h"
-// #include "pixie/pixie16/legacy.hpp"
-// #include "pixie/param.hpp"
 
 namespace rxdaq {
 
@@ -365,6 +362,7 @@ void Crate::WriteParameter(
 	std::cout << message_(MsgLevel::kDebug)
 		<< "Crate::WriteChannelParameter(" << name << ", " << value << ", "
 		<< module << ", " << channel << ")\n";
+
 	xia_crate_.ready();
 	xia::pixie::crate::module_handle module_handler(xia_crate_, module);
 	module_handler->write(name, channel, value);
@@ -405,13 +403,15 @@ void Crate::ImportParameters(const std::string &path) {
 }
 
 
-
 void Crate::ExportParameters(const std::string &path) {
 	std::cout << message_(MsgLevel::kDebug)
 		<< "Crate::ExportParameters(" <<  path << ").\n";
 	
 	xia_crate_.export_config(path);
 }
+
+
+
 
 inline unsigned int ClockDuration(
 	std::chrono::steady_clock::time_point start,
@@ -421,6 +421,34 @@ inline unsigned int ClockDuration(
 		stop - start
 	).count();
 }
+
+
+std::ofstream CreateRunDataStream(
+	std::string path,
+	std::string name,
+	unsigned short run,
+	unsigned short module
+) {
+	std::stringstream file_name;
+	file_name << path << name << "_R" << std::setfill('0') << std::setw(4)
+		<< run << "_M" << std::setfill('0') << std::setw(2) << module
+		<< ".bin";
+
+	return 
+		std::ofstream(file_name.str(), std::ios::binary | std::ios::trunc);
+}
+
+
+std::string RunDataDirectory(
+	std::string path,
+	std::string name,
+	unsigned int run
+) {
+	std::stringstream dir_name;
+	dir_name << path << name << std::setfill('0') << std::setw(4) << run << "/";
+	return dir_name.str();
+}
+
 
 void Crate::StartRun(unsigned short module_id, unsigned int seconds, int run) {
 	if (run != -1) {
@@ -434,101 +462,79 @@ void Crate::StartRun(unsigned short module_id, unsigned int seconds, int run) {
 	std::cout << message_(MsgLevel::kInfo)
 		<< "Starting list mode run" << (
 			seconds ?
-			" " + std::to_string(seconds) + " seconds" :
+			" for " + std::to_string(seconds) + " seconds" :
 			""
 		)
 		<< ".\n"; 
 
-	xia::pixie::hw::run::run_mode run_mode =
-		xia::pixie::hw::run::run_mode::new_run;
+	
 	xia_crate_.ready();
-	auto start_time = std::chrono::steady_clock::now();
+	
+	std::vector<unsigned short> modules =
+		CreateRequestIndexes(kModuleNum, ModuleNum(), module_id);
 
 	if (module_id == kModuleNum) {
 		WriteParameter("SYNCH_WAIT", 1, 0);
 		WriteParameter("IN_SYNCH", 0, 0);
-
-		for (const auto &module : xia_crate_.modules) {
-			module->start_listmode(run_mode);
-		}
-		
-		std::vector<std::ofstream> output_streams = [&]() {
-			std::vector<std::ofstream> result;
-			for (unsigned short i = 0; i < ModuleNum(); ++i) {
-
-				std::stringstream file_name;
-				file_name << config_.RunDataPath() << config_.RunDataFile()
-					<< "_R" << std::setfill('0') << std::setw(4) << run
-					<< "_M" << std::setfill('0') << std::setw(2) << i << ".bin";
-				result.push_back(std::ofstream(file_name.str()));
-			}
-			return result;
-		}();
-
-		auto stop_time = std::chrono::steady_clock::now();
-		while (ClockDuration(start_time, stop_time) < seconds) {
-			for (unsigned short i = 0; i < ModuleNum(); ++i) {
-				xia::pixie::crate::module_handle module(xia_crate_, i);
-				if (module->run_active()) {
-					ReadListModeData(module, output_streams[i], 131072.0*0.2);
-				} else {
-					std::cout << message_(MsgLevel::kInfo)
-						<< "Module " << i << " has no active run.\n";
-				}
-			}
-		}
-
-		StopRun(module_id);
-
-		for (unsigned short i = 0; i < ModuleNum(); ++i) {
-			xia::pixie::crate::module_handle module(xia_crate_, i);
-			ReadListModeData(module, output_streams[i], 0);
-		}
-
-		for (auto &file : output_streams) {
-			file.close();
-		}
 	} else {
+		WriteParameter("SYNCH_WAIT", 0, 0);
 		WriteParameter("IN_SYNCH", 0, module_id);
-		xia::pixie::crate::module_handle module(xia_crate_, module_id);
-		module->start_listmode(run_mode);
-
-		// output stream
-		std::stringstream file_name;
-		file_name << config_.RunDataPath() << config_.RunDataFile() << "_R"
-			<< std::setfill('0') << std::setw(4) << run << "_M"
-			<< std::setfill('0') << std::setw(2) << module_id << ".bin";
-		std::ofstream fout(file_name.str());
-
-		auto stop_time = std::chrono::steady_clock::now();
-		while (ClockDuration(start_time, stop_time) <= seconds) {
-			if (module->run_active()) {
-				ReadListModeData(module, fout, 131072.0*0.2);
-			} else {
-				std::cout << message_(MsgLevel::kInfo)
-					<< "Module " << module_id << "has no active run.\n";
-			}
-		}
-
-		StopRun(module_id);
-
-		ReadListModeData(module, fout, 0);
-		fout.close();
 	}
 
-	// display run time
-	auto stop_time = std::chrono::steady_clock::now();
-	unsigned int run_seconds = ClockDuration(start_time, stop_time);
-	unsigned int run_minutes = run_seconds / 60;
-	unsigned int run_hours = run_minutes / 60;
-	run_minutes %= 60;
-	run_seconds %= 3600;
-	std::cout << message_(MsgLevel::kInfo)
-		<< "List mode run finished in "
-		<< (run_hours ? std::to_string(run_hours) + ":" : "")
-		<< (run_minutes ? std::to_string(run_minutes) + ":" : "")
-		<< run_seconds << ".\n";
+	// create directory for data files
+	std::string dir_name =
+		RunDataDirectory(config_.RunDataPath(), config_.RunDataFile(), run);
+	std::filesystem::create_directories(dir_name);
+	// create output stream
+	run_output_streams_.clear();
+	for (const auto &m : modules) {
+		run_output_streams_.push_back(CreateRunDataStream(
+			dir_name, config_.RunDataFile(), run, m
+		));
+	}
 
+	// start list mode
+	for (const auto &m : modules) {
+		xia_crate_.modules[m]->start_listmode(
+			xia::pixie::hw::run::run_mode::new_run
+		);
+	}
+
+	// get data
+	run_start_time_ = std::chrono::steady_clock::now();
+	auto stop_time = run_start_time_;
+	while (!seconds || ClockDuration(run_start_time_, stop_time) < seconds) {
+		for (const auto &m : modules) {
+			if (xia_crate_.modules[m]->run_active()) {
+				ReadListModeData(m, 131072.0*0.2);
+			} else {
+				std::cout << message_(MsgLevel::kInfo)
+					<< "Module " << m << " has not active run.\n";
+			}
+		}
+	}
+
+	StopRun(module_id);
+}
+
+
+void Crate::WaitFinished(const std::vector<unsigned short> &modules) {
+	const unsigned int max_attempts = 30;
+	// check finished
+	bool finished = false;
+	for (unsigned int count = 0; count < max_attempts; ++count) {
+		finished = true;
+		for (const auto &m : modules) {
+			if (xia_crate_.modules[m]->run_active()) {
+				finished = false;
+			}
+		}
+		if (finished) return;
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	if (!finished) {
+		throw RXError("Not all modules stop run properly!");
+	}
 }
 
 
@@ -539,65 +545,104 @@ void Crate::StopRun(unsigned short module_id) {
 	std::cout << message_(MsgLevel::kInfo)
 		<< "Stopping list mode run.\n";
 
-	const unsigned int kMaxAttempts = 30;
 	xia_crate_.ready();
-	if (module_id == kModuleNum) {
-		for (auto &module : xia_crate_.modules) {
-			module->run_end();
-		}
 
-		bool finished = false;
-		for (unsigned int count = 0; count < kMaxAttempts; ++count) {
-			finished = true;
-			for (auto &module : xia_crate_.modules) {
-				if (module->run_active()) {
-					finished = false;
-				}
-			}
-			if (finished) break;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
-		if (!finished) {
-			throw UserError("Not all modules stop run properly!");
-		}
-	} else {
-		// (xia_crate_.modules[module_])->run_end();
-		xia::pixie::crate::module_handle module(xia_crate_, module_id);
-		module->run_end();
-		bool finished = false;
-		for (unsigned int count = 0; count != kMaxAttempts; ++count) {
-			if (!module->run_active()) {
-				finished = true;
-				break;
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
-		if (!finished) {
-			throw UserError("Module " + std::to_string(module_id) + "did not stop run properly!\n");
-		}
+	// stop run
+	unsigned short director_module = module_id == kModuleNum ? 0 : module_id;
+	xia_crate_.modules[director_module]->run_end();
+
+
+	std::vector<unsigned short> modules =
+		CreateRequestIndexes(kModuleNum, ModuleNum(), module_id);
+
+
+	WaitFinished(modules);
+
+	// read residual data
+	for (const auto &m : modules) {
+		ReadListModeData(m, 0);
 	}
+
+	// close streams
+	for (auto &stream : run_output_streams_) {
+		stream.close();
+	}
+
+	// display run time information
+	auto stop_time = std::chrono::steady_clock::now();
+	std::cout << message_(MsgLevel::kInfo)
+		<< RunTimeInfo(ClockDuration(run_start_time_, stop_time));
+
+
+	// export settings of this run
+	ExportParameters(RunDataDirectory(
+		config_.RunDataPath(), config_.RunDataFile(), config_.RunNumber()
+	) + "parameters.json");
+
+	// update run number and save
+	config_.SetRunNumber(config_.RunNumber()+1);
 	ExportParameters(config_path_);
 }
 
 
 
 void Crate::ReadListModeData(
-	xia::pixie::crate::module_handle &module,
-	std::ofstream &fout,
+	unsigned short module_id,
 	unsigned int threshold
 ) {
+	xia::pixie::crate::module_handle module(xia_crate_, module_id);
 	unsigned int fifo_words =
 		static_cast<unsigned int>(module->read_list_mode_level());
 
 	if (fifo_words > threshold) {
 		xia::pixie::hw::words data(fifo_words);
 		module->read_list_mode(data);
-		fout.write(
+		run_output_streams_[module_id].write(
 			reinterpret_cast<char*>(data.data()),
 			fifo_words*sizeof(uint32_t)
 		);
 	}
 }
+
+
+//-----------------------------------------------------------------------------
+// 								related functions
+//-----------------------------------------------------------------------------
+
+
+std::string RunTimeInfo(unsigned int duration) {
+	std::string result;
+	unsigned int seconds = duration;
+	unsigned int minutes = seconds / 60;
+	unsigned int hours = minutes / 60;
+	minutes %= 60;
+	seconds %= 3600;
+	result = "List mode run finished in "
+		+ (hours ? std::to_string(hours) + ":" : "")
+		+ (minutes ? std::to_string(minutes) + ":" : "")
+		+ std::to_string(seconds) + ".\n";
+	return result;
+}
+
+
+
+
+std::vector<unsigned short> CreateRequestIndexes(
+	unsigned short max_index,
+	unsigned short reality_limit,
+	unsigned short index
+) {
+	std::vector<unsigned short> result;
+	if (index == max_index) {
+		for (unsigned short i = 0; i < reality_limit; ++i) {
+			result.push_back(i);
+		}
+	} else {
+		result.push_back(index);
+	}
+	return result;
+};
+
 
 }	 // namespace rxdaq
 
@@ -608,7 +653,3 @@ void Crate::ReadListModeData(
 // 	std::cout << ds(dlv::Info, config_.CrateInfoStr());
 // 	return;
 // }
-
-
-
-// }		// RXDAQ

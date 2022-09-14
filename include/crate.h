@@ -242,15 +242,19 @@ private:
 
 	/// @brief read list mode data from hardware to binary files
 	///
-	/// @param[in] module module to read from
-	/// @param[in] fout output stream to write to
+	/// @param[in] module_id module to read from
 	/// @param[in] threshold threshold of buffer, write if over this threshold
 	///
-	void ReadListModeData(
-		xia::pixie::crate::module_handle &module,
-		std::ofstream &fout,
-		unsigned int threshold
-	);
+	void ReadListModeData(unsigned short module_id, unsigned int threshold);
+
+
+	/// @brief wait for all modules finish
+	///
+	/// @param[in] modules module to check
+	///
+	/// @throws rx error if not all module stop properly
+	///
+	void WaitFinished(const std::vector<unsigned short> &modules);
 
 
 	// xia crate, the lower level compoment
@@ -267,9 +271,38 @@ private:
 	std::string config_path_;
 	Config config_;
 
+	// run variables
+	std::vector<std::ofstream> run_output_streams_;
+	std::chrono::steady_clock::time_point run_start_time_;
 };
 
+
+/// @brief generate run time information
+///
+/// @param[in] duration duration time in seconds
+/// @returns run time information in string
+///
+std::string RunTimeInfo(unsigned int duration);
+
+
+/// @brief create vector of indexes for modules or channels
+///
+/// @param[in] max_index maximum index of the vector 
+/// @param[in] reality_limit reality limit of the vector size
+/// @param[in] index if index is equal to max_index, create the list from 0
+///		to reality limit, otherwise create a vector with only this index 
+/// @returns vector of the indexes
+///
+std::vector<unsigned short> CreateRequestIndexes(
+	unsigned short max_index,
+	unsigned short reality_limit,
+	unsigned short index
+);
+
+
 }	// namespace rxdaq
+
+
 
 
 
