@@ -10,7 +10,7 @@ TestCrate::TestCrate() noexcept
 	// initialize virtual modules
 	for (unsigned short i = 0; i < kModuleNum; ++i) {
 		modules_[i].status = ModuleStatus::kInitial;
-		modules_[i].boot_pattern = 0;
+		modules_[i].boot_mode = true;
 		modules_[i].config_file = "";
 	}
 	list_ = false;
@@ -22,9 +22,16 @@ void TestCrate::Initialize(const std::string&) noexcept {
 }
 
 
-void TestCrate::Boot(unsigned short module, unsigned short boot_pattern) noexcept {
-	modules_[module].status = ModuleStatus::kBooted;
-	modules_[module].boot_pattern = boot_pattern;
+void TestCrate::Boot(unsigned short module, bool fast) noexcept {
+	if (module == kModuleNum) {
+		for (unsigned short i = 0; i < ModuleNum(); ++i) {
+			modules_[i].status = ModuleStatus::kBooted;
+			modules_[i].boot_mode = fast;
+		}
+	} else {
+		modules_[module].status = ModuleStatus::kBooted;
+		modules_[module].boot_mode = fast;
+	}
 	return;
 }
 

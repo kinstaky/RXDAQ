@@ -16,9 +16,6 @@ namespace rxdaq {
 const unsigned short kChannelNum = 16;
 
 
-const unsigned short kFastBoot = 0x4;
-const unsigned short kEntireBoot = 0xf;
-
 /// parameters type
 enum class ParameterType {
 	kAll = 0,
@@ -78,21 +75,6 @@ public:
 	/// @throws XiaError if initialize failed
 	///
 	virtual void Initialize(const std::string &config_path = "");
-
-
-	/// @brief load the firmware
-	///
-	/// @param[in] module_id module to load
-	/// 
-	virtual void LoadFirmware(unsigned short module_id);
-
-
-	/// @brief boot one module
-	///
-	/// @param[in] module_id module to boot
-	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
-	/// 
-	virtual void BootModule(unsigned short module_id, bool fast = true);
 
 
 	/// @brief boot modules
@@ -242,6 +224,22 @@ public:
 	// } runConfig;
 
 private:
+
+	/// @brief load the firmware
+	///
+	/// @param[in] module_id module to load
+	/// 
+	virtual void LoadFirmware(unsigned short module_id);
+
+
+	/// @brief boot one module
+	///
+	/// @param[in] module_id module to boot
+	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
+	/// 
+	virtual void BootModule(unsigned short module_id, bool fast = true);
+
+
 	/// @brief read list mode data from hardware to binary files
 	///
 	/// @param[in] module module to read from

@@ -22,13 +22,30 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cxxopts)
 
+# fetch grpc/grpc
+FetchContent_Declare(
+	grpc
+	GIT_REPOSITORY https://github.com/grpc/grpc
+	GIT_TAG v1.48.1
+)
+set(FETCHCONTENT_QUIET OFF)
+FetchContent_MakeAvailable(grpc)
+
+set(_PROTOBUF_LIBPROTOBUF libprotobuf)
+set(_REFLECTION grpc++_reflection)
+set(_PROTOBUF_PROTOC $<TARGET_FILE:protoc>)
+set(_GRPC_GRPCPP grpc++)
+set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+
+add_subdirectory(proto)
+
 
 # include directories
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
 # error library
 add_library(
-	error STATIC
+	error
 	error.cpp ${PROJECT_INCLUDE_DIR}/error.h
 )
 target_include_directories(
@@ -42,7 +59,7 @@ target_compile_options(
 
 # message library
 add_library(
-	message STATIC
+	message
 	message.cpp ${PROJECT_INCLUDE_DIR}/message.h
 )
 target_include_directories(
@@ -56,7 +73,7 @@ target_compile_options(
 
 # config library
 add_library(
-	config STATIC
+	config
 	config.cpp ${PROJECT_INCLUDE_DIR}/config.h
 )
 target_include_directories(
@@ -74,7 +91,7 @@ target_link_libraries(
 
 # crate library
 add_library(
-	crate STATIC
+	crate
 	crate.cpp ${PROJECT_INCLUDE_DIR}/crate.h
 )
 target_include_directories(
@@ -90,9 +107,45 @@ target_link_libraries(
 	PUBLIC error config message PixieSDK
 )
 
+# remote crate
+add_library(
+	remote_crate
+	remote_crate.cpp ${PROJECT_INCLUDE_DIR}/remote_crate.h
+)
+target_include_directories(
+	remote_crate
+	PUBLIC ${PROJECT_SOURCE_DIR}
+)
+target_compile_options(
+	remote_crate
+	PRIVATE -Werror -Wall -Wextra
+)
+target_link_libraries(
+	remote_crate
+	PUBLIC crate control_crate_grpc_proto
+)
+
+# control crate service
+add_library(
+	control_crate_service
+	control_crate_service.cpp ${PROJECT_INCLUDE_DIR}/control_crate_service.h
+)
+target_include_directories(
+	control_crate_service
+	PUBLIC ${PROJECT_SOURCE_DIR}
+)
+target_compile_options(
+	control_crate_service
+	PRIVATE -Werror -Wall -Wextra
+)
+target_link_libraries(
+	control_crate_service
+	PUBLIC crate control_crate_grpc_proto
+)
+
 # interactor library
 add_library(
-	interactor STATIC
+	interactor
 	interactor.cpp ${PROJECT_INCLUDE_DIR}/interactor.h
 )
 target_include_directories(
@@ -105,12 +158,12 @@ target_compile_options(
 )
 target_link_libraries(
 	interactor
-	PUBLIC crate error cxxopts::cxxopts
+	PUBLIC crate error control_crate_service cxxopts::cxxopts 
 )
 
 # parser library
 add_library(
-	parser STATIC
+	parser
 	parser.cpp ${PROJECT_INCLUDE_DIR}/parser.h
 )
 target_include_directories(
@@ -128,7 +181,7 @@ target_link_libraries(
 
 # frame library
 add_library(
-	frame STATIC
+	frame
 	frame.cpp ${PROJECT_INCLUDE_DIR}/frame.h
 )
 target_include_directories(
@@ -141,5 +194,5 @@ target_compile_options(
 )
 target_link_libraries(
 	frame
-	PUBLIC interactor parser error crate
+	PUBLIC interactor parser error crate remote_crate
 )

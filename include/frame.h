@@ -28,8 +28,20 @@ public:
 
 	/// @brief set interactor directly
 	///
-	/// @param interactor pointer to the interactor
-	void SetInteractor(std::unique_ptr<Interactor> &interacotr);
+	/// @param[in] interactor pointer to the interactor
+	///
+	inline void SetInteractor(std::unique_ptr<Interactor> &interacotr) {
+		interactor_ = std::move(interacotr);
+	}
+
+
+	/// @brief set crate directly
+	///
+	/// @param[in] crate pointer to the interactor
+	///
+	inline void SetInteractor(std::shared_ptr<Crate> &crate) {
+		crate_ = crate;
+	}
 
 
 	/// @brief run the frame

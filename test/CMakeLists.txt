@@ -8,7 +8,7 @@ FetchContent_MakeAvailable(googletest)
 
 # test crate library
 add_library(
-	test_crate STATIC
+	test_crate
 	test_crate.cpp test_crate.h
 )
 target_compile_options(

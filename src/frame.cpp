@@ -3,7 +3,10 @@
 #include <exception>
 #include <iostream>
 
+#include "grpcpp/grpcpp.h"
+
 #include "include/error.h"
+#include "include/remote_crate.h"
 
 namespace rxdaq {
 
@@ -15,13 +18,6 @@ typedef xia::pixie::error::error XiaError;
 
 Frame::Frame()
 :interactor_(nullptr), crate_(nullptr) {
-}
-
-
-
-void Frame::SetInteractor(std::unique_ptr<Interactor> &interactor) {
-	interactor_ = std::move(interactor);
-	return;
 }
 
 
@@ -53,8 +49,12 @@ void Frame::Run() {
 		exit(-1);
 	}
 	// create crate if needed
-	if (interactor_->Type() != Interactor::InteractorType::kHelpCommandParser) {
+	if (interactor_->Type() == Interactor::InteractorType::kRpcCommandParser) {
 		crate_ = std::make_shared<Crate>();
+	} else if (interactor_->Type() != Interactor::InteractorType::kHelpCommandParser) {
+		crate_ = std::make_shared<RemoteCrate>(
+			grpc::CreateChannel("localhost:12300", grpc::InsecureChannelCredentials())
+		);
 	}
 
 	try {

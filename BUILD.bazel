@@ -50,7 +50,12 @@ cc_library(
 	hdrs = ["include/interactor.h"],
 	includes = ["include"],
 	copts = ["-std=c++17"],
-	deps = ["crate", "error", "@cxxopts//:cxxopts"],
+	deps = [
+		"crate",
+		"error",
+		"control_crate_service",
+		"@cxxopts//:cxxopts"
+	],
 	visibility = ["//visibility:public"]
 )
 
@@ -70,6 +75,42 @@ cc_library(
 	hdrs = ["include/frame.h"],
 	includes = ["include"],
 	copts = ["-std=c++17"],
-	deps = ["parser", "interactor", "crate"],
+	deps = [
+		"parser",
+		"interactor",
+		"crate",
+		"remote_crate"
+	],
 	visibility = ["//visibility:public"]
 )
+
+cc_library(
+	name = "remote_crate",
+	srcs = ["src/remote_crate.cpp"],
+	hdrs = ["include/remote_crate.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	deps = [
+		"crate",
+		"//src/proto:control_crate",
+		"@com_github_grpc_grpc//:grpc++"
+	],
+	visibility = ["//visibility:public"]
+)
+
+
+cc_library(
+	name = "control_crate_service",
+	srcs = ["src/control_crate_service.cpp"],
+	hdrs = ["include/control_crate_service.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	deps = [
+		"crate",
+		"//src/proto:control_crate",
+		"@com_github_grpc_grpc//:grpc++"
+	],
+	visibility = ["//visibility:public"]
+)
+
+

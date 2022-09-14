@@ -16,8 +16,8 @@ public:
 
 	enum class InteractorType {
 		kUndefined = 0,
-		kRpcServer,
 		kHelpCommandParser,
+		kRpcCommandParser,
 		kBootCommandParser,
 		kInfoCommandParser,
 		kReadCommandParser,
@@ -38,7 +38,10 @@ public:
 	
 	/// @brief constructor
 	///
-	Interactor() noexcept;
+	/// @param[in] name name of the program
+	/// @param[in] help description of the help information
+	///
+	Interactor(const std::string &name, const std::string &help) noexcept;
 
 
 	/// @brief default destructor
@@ -84,48 +87,20 @@ public:
 	/// @returns empty string
 	///
 	inline virtual std::string Help() const noexcept {
-		return "";
+		return options_.help();
 	}
 
 protected:
 	InteractorType type_;
-};
-
-
-/// This is the base class of command parser. All subcommands from the
-/// command line macthes a kind of command parser.
-class CommandParser : public Interactor {
-public:
-
-	/// @brief constructor
-	///
-	/// @param[in] name name of the program
-	/// @param[in] help description of the help information
-	///
-	CommandParser(const std::string &name, const std::string &help) noexcept;
-
-
-	/// @brief default destructor
-	///
-	virtual ~CommandParser() = default;
-
-
-	/// @brief get the help information of this interactor
-	///
-	inline virtual std::string Help() const noexcept override {
-		return options_.help();
-	}
-
-
-protected:
 	cxxopts::Options options_;
 };
+
 
 
 /// This class process the subcommand "help". It parse the arguments and
 /// crate a command parser matches the argument to print subcommand's help
 /// information. 
-class HelpCommandParser final : public CommandParser {
+class HelpCommandParser final : public Interactor {
 public:
 	
 	/// @brief default constructor
@@ -176,9 +151,61 @@ private:
 };
 
 
+class RpcCommandParser : public Interactor {
+public:
+
+	/// @brief constructor
+	///
+	RpcCommandParser() noexcept;
+
+
+	/// @brief default destructor
+	///
+	~RpcCommandParser() = default;
+
+
+	/// @brief  get the command name
+	///
+	/// @returns command name 'rpc'
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return std::string("rpc");
+	}
+
+
+	/// @brief get help information
+	///
+	/// @returns help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get boot information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv the arguments
+	///
+	/// @throws UserError: unmatched arguments or invalid module id
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and boot modules
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	std::string host_;
+	std::string port_;
+};
+
+
 /// This class processes the subcommand "boot". It boots the modules
 /// in the crate.
-class BootCommandParser : public CommandParser {
+class BootCommandParser : public Interactor {
 public:
 
 	/// @brief constructor
@@ -217,9 +244,6 @@ public:
 	virtual void Parse(int argc, char **argv) override;
 
 
-	
-
-
 	/// @brief run the interactor and boot modules
 	///
 	/// @param[in] crate pointer to crate object
@@ -254,7 +278,7 @@ private:
 
 
 /// This class parse the options of subcommand read and try to read parameters.
-class ReadCommandParser : public CommandParser {
+class ReadCommandParser : public Interactor {
 public:
 
 	/// @brief constructor
@@ -307,7 +331,7 @@ private:
 
 
 /// This class parse the options of subcommand write and try to write parameters.
-class WriteCommandParser : public CommandParser {
+class WriteCommandParser : public Interactor {
 public:
 
 	/// @brief constructor
@@ -361,7 +385,7 @@ private:
 
 /// This class parse the options of subcommand import and import the module
 /// and channel parameters from file.
-class ImportCommandParser : public CommandParser {
+class ImportCommandParser : public Interactor {
 public:
 
 	/// @brief constructor
@@ -412,7 +436,7 @@ private:
 
 /// This class parse the options of subcommand export and export the module
 /// and channel parameters to file.
-class ExportCommandParser : public CommandParser {
+class ExportCommandParser : public Interactor {
 public:
 
 	/// @brief constructor
@@ -464,7 +488,7 @@ private:
 
 
 /// This class parse the options of subcommand run and run in list mode.
-class RunCommandParser : public CommandParser {
+class RunCommandParser : public Interactor {
 public:
 
 	/// @brief constructor

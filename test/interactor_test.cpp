@@ -210,17 +210,17 @@ TEST(InteractorTest, ParseBootCommand) {
 		EXPECT_NO_THROW(interactor->Run(crate));
 		
 		if (kBootCommands[i].module == kModuleNum) {
-			for (unsigned short j = 0; j < kModuleNum; ++j) {
+			for (unsigned short j = 0; j < crate->ModuleNum(); ++j) {
 				EXPECT_EQ(crate->modules_[j].status, TestCrate::ModuleStatus::kBooted)
 					<< "Error: module didn't boot " << j;
-				EXPECT_EQ(crate->modules_[j].boot_pattern, kEntireBoot)
+				EXPECT_EQ(crate->modules_[j].boot_mode, false)
 					<< "Error: module didn't boot entirely " << j;
 			}
 		} else {
 			unsigned short index = kBootCommands[i].module;
 			EXPECT_EQ(crate->modules_[index].status, TestCrate::ModuleStatus::kBooted)
 				<< "Error: module didn't boot " << index;
-			EXPECT_EQ(crate->modules_[index].boot_pattern, kEntireBoot)
+			EXPECT_EQ(crate->modules_[index].boot_mode, false)
 				<< "Error: module didn't boot entirely " << index;
 		}
 	}

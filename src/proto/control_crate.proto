@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package rxdaq;
+
+service ControlCrate {
+	rpc Initialize(EmptyMessage) returns (InitializeReply) {}
+	rpc Boot (BootRequest) returns (BootReply) {}
+	rpc Read (ReadRequest) returns (ReadReply) {}
+	rpc Write (WriteRequest) returns (WriteReply) {}
+}
+
+enum ExceptionType {
+	UNDEFINED = 0;
+	FATALERROR = 1;
+	WARNING = 2;
+};
+
+message EmptyMessage {
+}
+
+message InitializeReply {
+	uint32 num = 1;
+	ExceptionType exception_type = 2;
+	string message = 3;
+}
+
+message BootRequest {
+	uint32 module = 1;
+	bool fast = 2;
+}
+
+message BootReply {
+	ExceptionType exception_type = 1;
+	string message = 2;
+}
+
+
+message ReadRequest {
+	string name = 1;
+	uint32 module = 2;
+	uint32 channel = 3;
+}
+
+message ReadReply {
+	uint32 module_value = 1;
+	double channel_value = 2;
+	ExceptionType exception_type = 3;
+	string message = 4;
+}
+
+
+message WriteRequest {
+	string name = 1;
+	uint32 module_value = 2;
+	double channel_value = 3;
+	uint32 module = 4;
+	uint32 channel = 5;
+}
+
+message WriteReply {
+	ExceptionType exception_type = 1;
+	string message = 2;
+}

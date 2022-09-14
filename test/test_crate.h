@@ -26,7 +26,7 @@ public:
 	/// virtual module to recrod the process on modules 
 	struct TestModule {
 		ModuleStatus status;
-		unsigned short boot_pattern;
+		bool boot_mode;
 		std::map<std::string, unsigned int> module_parameters;
 		std::map<std::string, double> channel_parameters[kChannelNum];
 		std::string config_file;
@@ -72,7 +72,7 @@ public:
 	///
 	virtual void Boot(
 		unsigned short module,
-		unsigned short boot_pattern = kFastBoot
+		bool fast = true
 	) noexcept override;
 
 

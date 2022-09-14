@@ -28,6 +28,7 @@ const size_t kFifoHoldUsecs = 50000;
 
 Crate::Crate() noexcept
 : message_(Message::Level::kWarning), config_path_("config.json") {
+	message_.SetColorfulPrefix();
 }
 
 

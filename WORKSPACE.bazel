@@ -37,3 +37,14 @@ http_archive(
 	strip_prefix = "cxxopts-f7cf84bd56b47728e4674f316d274b3d82a1cfb3/include",
 	build_file = "@//:bazel/build_cxxopts.bazel"
 )
+
+# grpc
+http_archive(
+	name = "com_github_grpc_grpc",
+	urls = ["https://github.com/grpc/grpc/archive/v1.48.1.tar.gz"],
+	strip_prefix = "grpc-1.48.1"
+)
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+grpc_deps()
+load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
+grpc_extra_deps()

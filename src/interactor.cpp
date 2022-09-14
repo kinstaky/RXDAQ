@@ -3,9 +3,11 @@
 #include <iostream>
 #include <thread>
 
+#include "grpcpp/grpcpp.h"
 #include "pixie/error.hpp"
 
 #include "include/error.h"
+#include "include/control_crate_service.h"
 
 typedef xia::pixie::error::error XiaError;
 
@@ -15,8 +17,9 @@ namespace rxdaq {
 //								Interactor
 //-----------------------------------------------------------------------------
 
-Interactor::Interactor() noexcept
-: type_(InteractorType::kUndefined) {
+Interactor::Interactor(const std::string &name, const std::string &help) noexcept
+: type_(InteractorType::kUndefined)
+, options_("./rxdaq " + name, help) {
 
 }
 
@@ -26,6 +29,8 @@ std::unique_ptr<Interactor> Interactor::CreateInteractor(const char* name) noexc
 		result = nullptr;
 	} else if (!strcmp(name, "help")) {
 		result = std::make_unique<HelpCommandParser>();
+	} else if (!strcmp(name, "rpc")) {
+		result = std::make_unique<RpcCommandParser>();
 	} else if (!strcmp(name, "boot")) {
 		result = std::make_unique<BootCommandParser>();
 	// } else if (!strcmp(name, "info")) {
@@ -46,21 +51,11 @@ std::unique_ptr<Interactor> Interactor::CreateInteractor(const char* name) noexc
 
 
 //-----------------------------------------------------------------------------
-// 								CommandParser
-//-----------------------------------------------------------------------------
-
-CommandParser::CommandParser(const std::string &name, const std::string &help) noexcept
-: options_("./rxdaq " + name, help) {
-
-}
-
-
-//-----------------------------------------------------------------------------
 // 								HelpCommandParser
 //-----------------------------------------------------------------------------
 
 HelpCommandParser::HelpCommandParser() noexcept
-: CommandParser(CommandName(), "")
+: Interactor(CommandName(), "")
 , help_information_("") {
 
 	type_ = InteractorType::kHelpCommandParser;
@@ -75,6 +70,7 @@ std::string HelpCommandParser::Help() const noexcept {
 		"\n"
 		"Available commands:\n"
 		"  help                  Display help information.\n"
+		"  rpc                   Run as rpc server.\n"
 		"  boot                  Boot modules.\n"
 		"  read                  Read parameters.\n"
 		"  write                 Write parameters.\n"
@@ -124,12 +120,105 @@ void HelpCommandParser::Run(std::shared_ptr<Crate> crate) {
 }
 
 
+
+//-----------------------------------------------------------------------------
+// 								RpcCommandParser
+//-----------------------------------------------------------------------------
+
+RpcCommandParser::RpcCommandParser() noexcept
+: Interactor(CommandName(), "launch rpc server") {
+
+	type_ = InteractorType::kRpcCommandParser;
+	options_.add_options()
+		(
+			"h,host", "Set the host of server.",
+			cxxopts::value<std::string>()->default_value("0.0.0.0"),
+			"<address>"
+		)
+		(
+			"p,port", "Set the port of server.",
+			cxxopts::value<std::string>()->default_value("12300"),
+			"<port>"
+		)
+		(
+			"config", "Set config file path.",
+			cxxopts::value<std::string>()->default_value("config.json"),
+			"<file>"
+		)
+		(
+			"host_pos", "Set the host of server",
+			cxxopts::value<std::string>()->default_value("0.0.0.0")
+		)
+		(
+			"port_pos", "Set the port of server.",
+			cxxopts::value<std::string>()->default_value("12300")
+		);
+	options_.parse_positional({"host_pos", "port_pos"});
+	options_.positional_help("[host] [port]");
+}
+
+
+std::string RpcCommandParser::Help() const noexcept {
+	std::string result = options_.help();
+	result += "\n"
+		"Examples:\n"
+		"  './rxdaq rpc' to launch the rpc server.\n"
+		"  './rxdaq rpc 0.0.0.0 12300' to launch the rpc server and listen\n"
+		"    on 0.0.0.0:12300\n"
+		"  './rxdaq rpc -h 0.0.0.0 -p 12300' to do the same thing as above.\n"
+		"Remember that --config can be used to choose path of json config file.\n";
+	
+	return result;
+}
+
+
+void RpcCommandParser::Parse(int argc, char **argv) {
+	auto parse_result = options_.parse(argc, argv);
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
+
+	// get parameters
+	config_path_ = parse_result["config"].as<std::string>();
+
+	host_ = parse_result["host"].count() ?
+		parse_result["host"].as<std::string>() :
+		parse_result["host_pos"].as<std::string>();
+
+	port_ = parse_result["port"].count() ?
+		parse_result["port"].as<std::string>() :
+		parse_result["port_pos"].as<std::string>();
+
+	return;
+}
+
+
+void RpcCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize(config_path_);
+	
+	// service
+	ControlCrateService service(crate);
+	grpc::ServerBuilder builder;
+	builder.AddListeningPort(
+		host_ + ":" + port_,
+		grpc::InsecureServerCredentials()
+	);
+	builder.RegisterService(&service);
+
+	std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+	std::cout << "Rpc server listening on " << host_ << ":" << port_ << "\n";
+
+	server->Wait(); 
+}
+
+
+
 //-----------------------------------------------------------------------------
 // 								BootCommandParser
 //-----------------------------------------------------------------------------
 
 BootCommandParser::BootCommandParser() noexcept
-: CommandParser(CommandName(), "boot firmwares")
+: Interactor(CommandName(), "boot firmwares")
 , config_path_("")
 , module_(kModuleNum) {
 
@@ -174,6 +263,9 @@ void BootCommandParser::Parse(int argc, char **argv) {
 		throw UserError("too many arguments");
 	}
 
+	// check config
+	config_path_ = parse_result["config"].as<std::string>();
+
 	// check module
 	module_ = parse_result["module"].count() ?
 		parse_result["module"].as<int>() :
@@ -184,8 +276,7 @@ void BootCommandParser::Parse(int argc, char **argv) {
 		throw UserError("module should be positive");
 	}
 
-	// check config
-	config_path_ = parse_result["config"].as<std::string>();
+	
 	return;
 }
 
@@ -225,7 +316,7 @@ void BootCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 ReadCommandParser::ReadCommandParser() noexcept
-: CommandParser(CommandName(), "read parameters")
+: Interactor(CommandName(), "read parameters")
 , config_path_("config.json")
 , name_("")
 , module_(kModuleNum)
@@ -301,7 +392,10 @@ std::string ReadCommandParser::Help() const noexcept {
 
 void ReadCommandParser::Parse(int argc, char **argv) {
 	auto parse_result = options_.parse(argc, argv);
-	
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
+
 	// get parameters
 	config_path_ = parse_result["config"].as<std::string>();
 
@@ -389,7 +483,7 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 WriteCommandParser::WriteCommandParser() noexcept
-: CommandParser(CommandName(), "write parameters")
+: Interactor(CommandName(), "write parameters")
 , config_path_("config.json")
 , name_("")
 , value_("")
@@ -478,7 +572,10 @@ std::string WriteCommandParser::Help() const noexcept {
 
 void WriteCommandParser::Parse(int argc, char **argv) {
 	auto parse_result = options_.parse(argc, argv);
-	
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
+
 	// get parameters
 	config_path_ = parse_result["config"].as<std::string>();
 
@@ -548,7 +645,7 @@ void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 ImportCommandParser::ImportCommandParser() noexcept
-: CommandParser(CommandName(), "import parameters from json file")
+: Interactor(CommandName(), "import parameters from json file")
 , config_path_("config.json")
 , parameter_config_path_("") {
 
@@ -588,6 +685,9 @@ std::string ImportCommandParser::Help() const noexcept {
 
 void ImportCommandParser::Parse(int argc, char **argv) {
 	auto parse_result = options_.parse(argc, argv);
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
 
 	// get parameters
 	config_path_ = parse_result["config"].as<std::string>();
@@ -610,7 +710,7 @@ void ImportCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 ExportCommandParser::ExportCommandParser() noexcept
-: CommandParser(CommandName(), "export parameters from json file")
+: Interactor(CommandName(), "export parameters from json file")
 , config_path_("config.json")
 , parameter_config_path_("") {
 
@@ -651,6 +751,9 @@ std::string ExportCommandParser::Help() const noexcept {
 
 void ExportCommandParser::Parse(int argc, char** argv) {
 	auto parse_result = options_.parse(argc, argv);
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
 
 	// get parameters
 	config_path_ = parse_result["config"].as<std::string>();
@@ -673,7 +776,7 @@ void ExportCommandParser::Run(std::shared_ptr<Crate> crate) {
 //-----------------------------------------------------------------------------
 
 RunCommandParser::RunCommandParser() noexcept
-: CommandParser(CommandName(), "run in list mode")
+: Interactor(CommandName(), "run in list mode")
 , config_path_("config.json")
 , module_(kModuleNum)
 , seconds_(0)
@@ -741,6 +844,9 @@ std::string RunCommandParser::Help() const noexcept {
 
 void RunCommandParser::Parse(int argc, char **argv) {
 	auto parse_result = options_.parse(argc, argv);
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
 
 	// get parameters
 	config_path_ = parse_result["config"].as<std::string>();
