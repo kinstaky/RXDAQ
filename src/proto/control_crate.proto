@@ -4,9 +4,9 @@ package rxdaq;
 
 service ControlCrate {
 	rpc Initialize(EmptyMessage) returns (InitializeReply) {}
-	rpc Boot (BootRequest) returns (BootReply) {}
-	rpc Read (ReadRequest) returns (ReadReply) {}
-	rpc Write (WriteRequest) returns (WriteReply) {}
+	rpc Boot (BootRequest) returns (EmptyReply) {}
+	rpc ReadParameter (ReadRequest) returns (ReadReply) {}
+	rpc WriteParameter (WriteRequest) returns (EmptyReply) {}
 }
 
 enum ExceptionType {
@@ -14,6 +14,7 @@ enum ExceptionType {
 	FATALERROR = 1;
 	WARNING = 2;
 };
+
 
 message EmptyMessage {
 }
@@ -29,7 +30,7 @@ message BootRequest {
 	bool fast = 2;
 }
 
-message BootReply {
+message EmptyReply {
 	ExceptionType exception_type = 1;
 	string message = 2;
 }
@@ -37,8 +38,9 @@ message BootReply {
 
 message ReadRequest {
 	string name = 1;
-	uint32 module = 2;
-	uint32 channel = 3;
+	uint32 type = 2;
+	uint32 module = 3;
+	uint32 channel = 4;
 }
 
 message ReadReply {
@@ -51,13 +53,9 @@ message ReadReply {
 
 message WriteRequest {
 	string name = 1;
-	uint32 module_value = 2;
-	double channel_value = 3;
-	uint32 module = 4;
-	uint32 channel = 5;
-}
-
-message WriteReply {
-	ExceptionType exception_type = 1;
-	string message = 2;
+	uint32 type = 2;
+	uint32 module_value = 3;
+	double channel_value = 4;
+	uint32 module = 5;
+	uint32 channel = 6;
 }

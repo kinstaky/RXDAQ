@@ -417,16 +417,18 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 
 void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	crate->Boot(module_, true);
+	// crate->Boot(module_, true);
 
 	if (name_.empty()) {
 		std::cout << crate->ListParameters();
 		return;
 	}
 	auto type = crate->CheckParameter(name_);
+	std::cout << "parameter type " << int(type) << "\n";
 	if (type == ParameterType::kInvalid) {
 		throw UserError("Invalid paraemter" + name_ + ".\n");
 	} else if (type == ParameterType::kModule) {
+		std::cout << "module parameter \n";
 
 		// prepare for modules to read
 		auto modules = CreateRequestIndexes(kModuleNum, crate->ModuleNum(), module_);
@@ -604,7 +606,7 @@ void WriteCommandParser::Parse(int argc, char **argv) {
 
 void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	crate->Boot(module_, true);
+	// crate->Boot(module_, true);
 
 
 	if (name_.empty()) {

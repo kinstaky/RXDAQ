@@ -59,58 +59,58 @@ public:
 	// //-------------------------------------------------------------------------
 
 
-	// /// @brief read module parameter
-	// ///
-	// /// @param[in] name name of the parameter
-	// /// @param[in] module modules to read
-	// /// @returns parameter value
-	// ///
-	// virtual unsigned int ReadParameter(
-	// 	const std::string &name,
-	// 	unsigned short module
-	// );
+	/// @brief read module parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] module modules to read
+	/// @returns parameter value
+	///
+	virtual unsigned int ReadParameter(
+		const std::string &name,
+		unsigned short module
+	);
 
 
-	// /// @brief read channel parameters
-	// ///
-	// /// @param[in] name name of the parameter
-	// /// @param[in] module the module to read 
-	// /// @param[in] channel the channel to read
-	// /// @returns parameter value
-	// ///
-	// virtual double ReadParameter(
-	// 	const std::string &name,
-	// 	unsigned short module,
-	// 	unsigned short channel
-	// );
+	/// @brief read channel parameters
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] module the module to read 
+	/// @param[in] channel the channel to read
+	/// @returns parameter value
+	///
+	virtual double ReadParameter(
+		const std::string &name,
+		unsigned short module,
+		unsigned short channel
+	);
 
 
-	// /// @brief write module parameter
-	// ///
-	// /// @param[in] name name of the parameter
-	// /// @param[in] value value to write
-	// /// @param[in] module module to write
-	// ///
-	// virtual void WriteParameter(
-	// 	const std::string &name,
-	// 	unsigned int value,
-	// 	unsigned short module
-	// );
+	/// @brief write module parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] value value to write
+	/// @param[in] module module to write
+	///
+	virtual void WriteParameter(
+		const std::string &name,
+		unsigned int value,
+		unsigned short module
+	);
 
 
-	// /// @brief write channel parameter
-	// ///
-	// /// @param[in] name name of the parameter
-	// /// @param[in] value value to write
-	// /// @param[in] module module to write
-	// /// @param[in] channel channel to write
-	// ///
-	// virtual void WriteParameter(
-	// 	const std::string &name,
-	// 	double value,
-	// 	unsigned short module,
-	// 	unsigned short channel
-	// );
+	/// @brief write channel parameter
+	///
+	/// @param[in] name name of the parameter
+	/// @param[in] value value to write
+	/// @param[in] module module to write
+	/// @param[in] channel channel to write
+	///
+	virtual void WriteParameter(
+		const std::string &name,
+		double value,
+		unsigned short module,
+		unsigned short channel
+	);
 
 
 	// /// @brief import parameters from json file
