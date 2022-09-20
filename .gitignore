@@ -1,6 +1,4 @@
 # legacy codes
-main/
-lib/
 tools/
 
 # C/C++ build outputs
@@ -18,3 +16,6 @@ bazel-*
 
 # Visual Studio Code artifacts
 .vscode/*
+
+# pixie sdk log
+Pixie16Msg.log
