@@ -1,6 +1,8 @@
 {
     "crateId": 0,
     "messageLevel": "debug",
+	"xiaLogLevel": "warning",
+	"parameterFile": "/home/test/Tools/RXDAQ/parameters.json",
     "modules": [
         {
             "slot": 2,
@@ -30,11 +32,9 @@
             "fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/fippixie16_revfpku_14b100m_r39574.bin",
             "ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.ldr",
             "name": "100M",
-            "par": "/home/test/Tools/RXDAQ/parameters.json",
             "rate": 100,
             "rev": 15,
             "sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/syspixie16_revfpku_adc100hz_r44498.bin",
-            "trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.lst",
             "var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b100m_firmware_release_06092020/Pixie16DSP_revfpku_14b100m_r40391.var",
             "version": "40391"
         },
@@ -43,11 +43,9 @@
             "fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/fippixie16_revfpku_14b250m_r45226.bin",
             "ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.ldr",
             "name": "250M",
-            "par": "/home/test/Tools/RXDAQ/parameters.json",
             "rate": 250,
             "rev": 15,
             "sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/syspixie16_revfpku_adc250hz_r44499.bin",
-            "trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.lst",
             "var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.var",
             "version": "44496"
         },
@@ -56,11 +54,9 @@
             "fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/fippixie16_revfgeneral_14b500m_r34687.bin",
             "ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/Pixie16DSP_revfpku_14b500m_r43351.ldr",
             "name": "500M",
-            "par": "/home/test/Tools/RXDAQ/parameters.json",
             "rate": 500,
             "rev": 15,
             "sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/syspixie16_revfpku_adc500hz_r44500.bin",
-            "trig": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/Pixie16DSP_revfpku_14b500m_r43351.lst",
             "var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b500m_firmware_release_06102020/Pixie16DSP_revfpku_14b500m_r43351.var",
             "version": "43351"
         }

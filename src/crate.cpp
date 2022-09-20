@@ -47,6 +47,21 @@ Crate::~Crate() {
 }
 
 
+xia::log::level GetXiaLogLevel(const std::string &level) {
+	if (level == "error") {
+		return xia::log::error;
+	} else if (level == "warning") {
+		return xia::log::warning;
+	} else if (level == "info") {
+		return xia::log::info;
+	} else if (level == "debug") {
+		return xia::log::debug;
+	} else {
+		return xia::log::warning;
+	}
+}
+
+
 void Crate::Initialize(const std::string &config_path) {
 	if (!config_path.empty()) {
 		config_path_ = config_path;
@@ -58,7 +73,7 @@ void Crate::Initialize(const std::string &config_path) {
 	std::cout << message_(MsgLevel::kDebug) << "Crate::Init().\n";
 
 	xia::logging::start("log", "Pixie16Msg.log", true);
-	xia::logging::set_level(xia::log::warning);
+	xia::logging::set_level(GetXiaLogLevel(config_.XiaLogLevel()));
 
 	// xia crate init
 	xia_crate_.initialize();
@@ -200,7 +215,7 @@ void Crate::Boot(unsigned short module_id, bool fast) {
 	xia_crate_.set_firmware();
 	xia_crate_.boot(!fast);
 
-	ImportParameters(config_.Par(0));
+	ImportParameters(config_.ParameterFile());
 	booted_ = true;
 }
 

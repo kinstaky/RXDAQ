@@ -1,10 +1,7 @@
 {	
 	"messageLevel": "debug",
 	"crateId": 0,
+	"modules": "",
 	"xiaLogLevel": "warning",
-	"parameterFile": "parameters.json",
-	"modules": [
-		{}
-	],
 	"run": ""
 }

@@ -26,6 +26,8 @@ const std::vector<std::string> kIncompletionTestDataFiles = {
 	"lack-crate-id.json",
 	"lack-modules.json",
 	"lack-run.json",
+	"lack-xia-log-level.json",
+	"lack-parameter-file.json",
 	"empty-modules.json",
 	"invalid-slot.json",
 	"module-lack-ldr.json",
@@ -46,6 +48,8 @@ const std::vector<std::string> kIncompletionTestErrorMessages = {
 	"Lack of parameter \"crateId\".\n",
 	"Lack of parameter \"modules\".\n",
 	"Lack of parameter \"run\".\n",
+	"Lack of parameter \"xiaLogLevel\".\n",
+	"Lack of parameter \"parameterFile\".\n",
 	"Module 0 lack of parameter \"slot\".\n",
 	"Slot (1) of module 0 is invalid(2 - 14).\n",
 	"Module 0 lack of parameter \"template\" or \"ldr\".\n",
@@ -71,72 +75,66 @@ struct ModuleInformation {
 	unsigned short rate;
 	unsigned short bits;
 	std::string ldr;
-	std::string par;
 	std::string var;
 	std::string fippi;
 	std::string sys;
-	std::string trig;
+	std::string version;
 };
 const std::vector<ModuleInformation> kModules = {
 	{
 		2,
-		1,
+		10,
 		100,
-		11,
+		14,
 		"ldr1",
-		"par1",
 		"var1",
 		"fippi1",
 		"sys1",
-		"trig1"
+		"1"
 	},
 	{
 		3,
-		1,
+		10,
 		100,
-		11,
+		14,
 		"ldr3",
-		"par3",
 		"var3",
 		"fippi3",
 		"sys3",
-		"trig3"
+		"3"
 	},
 	{
 		4,
-		2,
-		200,
+		12,
+		250,
 		12,
 		"ldr2",
-		"par2",
 		"var2",
 		"fippi2",
 		"sys2",
-		"trig2"
+		"2"
 	},
 	{
 		5,
-		2,
-		200,
+		12,
+		250,
 		12,
 		"ldr4",
-		"par4",
 		"var4",
 		"fippi4",
 		"sys4",
-		"trig4"
+		"4"
 	},
 	{
 		8,
-		5,
-		500,
 		15,
+		500,
+		16,
 		"ldr5",
-		"par5",
 		"var5",
 		"fippi5",
 		"sys5",
-		"trig5"
+		"5"
 	}
 };
 
@@ -165,7 +163,7 @@ TEST(ConfigTest, Completion) {
 			+ std::string("completion/")
 			+ kCompletionTestDataFiles[i]
 		))
-			<< "Error: case didn't pass " << i;
+			<< "Error: completion case didn't pass " << i;
 	}
 }
 
@@ -181,6 +179,10 @@ TEST(ConfigTest, Correction) {
 	EXPECT_EQ(config.ModuleNum(), kModules.size());
 
 	EXPECT_EQ(config.RunNumber(), 10);
+
+	EXPECT_STREQ(config.ParameterFile().c_str(), "parameters.json");
+
+	EXPECT_STREQ(config.XiaLogLevel().c_str(), "warning");
 
 	EXPECT_STREQ(config.RunDataPath().c_str(), "./");
 
@@ -202,9 +204,6 @@ TEST(ConfigTest, Correction) {
 		EXPECT_EQ(config.Ldr(i), kModules[i].ldr)
 			<< "Error: ldr " << i;
 
-		EXPECT_EQ(config.Par(i), kModules[i].par)
-			<< "Eroro: par " << i;
-
 		EXPECT_EQ(config.Var(i), kModules[i].var)
 			<< "Error: var " << i;
 
@@ -214,7 +213,7 @@ TEST(ConfigTest, Correction) {
 		EXPECT_EQ(config.Sys(i), kModules[i].sys)
 			<< "Error: sys " << i;
 
-		EXPECT_EQ(config.Trig(i), kModules[i].trig)
-			<< "Error: trig " << i;
+		EXPECT_EQ(config.Version(i), kModules[i].version)	
+			<< "Error: version " << i;
 	}
 }

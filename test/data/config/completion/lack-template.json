@@ -1,6 +1,8 @@
 {
 	"messageLevel": "debug",
 	"crateId": 0,
+	"xiaLogLevel": "warning",
+	"parameterFile": "parameters.json",
 	"template": [
 		{
 			"name": "500M",
@@ -8,11 +10,10 @@
 			"rate": 100,
 			"bits": 14,
 			"ldr": "ldr",
-			"par": "par",
 			"var": "var",
 			"fippi": "fippi",
 			"sys": "sys",
-			"trig": "trig"
+			"version": "1"
 		}
 	],
 	"modules": [

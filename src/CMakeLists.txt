@@ -86,7 +86,7 @@ target_compile_options(
 )
 target_link_libraries(
 	config
-	PUBLIC nlohmann_json::nlohmann_json
+	PUBLIC error nlohmann_json::nlohmann_json
 )
 
 # crate library

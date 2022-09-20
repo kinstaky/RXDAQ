@@ -1,17 +1,18 @@
 {
 	"messageLevel": "debug",
 	"crateId": 0,
+	"xiaLogLevel": "warning",
+	"parameterFile": "parameters.json",
 	"modules": [
 		{
 			"slot": 2,
 			"rev": 6,
 			"rate": 250,
 			"bits": 14,
-			"par": "par",
 			"var": "var",
 			"fippi": "fippi",
 			"sys": "sys",
-			"trig": "trig"
+			"version": "1"
 		}
 	],
 	"run": ""

@@ -7,6 +7,8 @@
 
 #include "nlohmann/json.hpp"
 
+#include "include/error.h"
+
 const unsigned short kModuleNum = 13;
 
 namespace rxdaq {
@@ -39,30 +41,37 @@ public:
 	void WriteToFile(const std::string &file_name);
 
 
+	//-------------------------------------------------------------------------
+	// 							global configuration
+	//-------------------------------------------------------------------------
+
 	/// @brief get message level
 	///
 	/// @returns message level
 	///
 	inline std::string MessageLevel() const {
-		return message_level_;
+		return json_["messageLevel"];
 	}
 
 
-	/// @brief get crate id
+	/// @brief get xia log level
 	///
-	/// @returns crate id
+	/// @returns xia log level in string
 	///
-	inline unsigned short CrateId() const {
-		return crate_id_;
+	inline std::string XiaLogLevel() const {
+		return json_["xiaLogLevel"];
 	}
 
+	//-------------------------------------------------------------------------
+	// 							crate configuration
+	//-------------------------------------------------------------------------
 
 	///	@brief get module number
 	///
 	/// @returns module number
 	///
 	inline unsigned short ModuleNum() const {
-		return module_num_;
+		return json_["modules"].size();
 	}
 
 
@@ -71,12 +80,30 @@ public:
 	/// @returns physical slot number
 	///
 	inline unsigned short Slot(size_t index) const {
-		return module_information_[index].slot;
+		return json_["modules"][index]["slot"];
+	}
+
+
+	/// @brief get crate id
+	///
+	/// @returns crate id
+	///
+	inline unsigned short CrateId() const {
+		return json_["crateId"];
+	}
+
+
+	/// @brief get path of parameter setting file
+	///
+	/// @returns path of parameter setting file
+	///
+	inline std::string ParameterFile() const {
+		return json_["parameterFile"];
 	}
 
 
 	//-------------------------------------------------------------------------
-	// 				firmware version information
+	// 					firmware version information
 	//-------------------------------------------------------------------------
 
 
@@ -86,7 +113,7 @@ public:
 	/// @returns revision of module
 	///
 	inline unsigned short Revision(size_t index) const {
-		return module_information_[index].revision;
+		return GetBootInfo<unsigned short>(index, "rev");
 	}
 
 
@@ -96,7 +123,7 @@ public:
 	/// @returns sampling rate of module
 	///
 	inline unsigned short Rate(size_t index) const {
-		return module_information_[index].rate;
+		return GetBootInfo<unsigned short>(index, "rate");
 	}
 
 
@@ -106,7 +133,7 @@ public:
 	/// @returns adc bits of module
 	///
 	inline unsigned short Bits(size_t index) const {
-		return module_information_[index].bits;
+		return GetBootInfo<unsigned short>(index, "bits");
 	}
 	
 
@@ -114,13 +141,37 @@ public:
 	// 								boot files
 	//-------------------------------------------------------------------------
 
+	/// @brief get boot information of module by index
+	///
+	/// @tparam 
+	/// @param[in] index index of module
+	/// @returns path of boot file
+	///
+	template <typename ReturnType>
+	ReturnType GetBootInfo(size_t index, const std::string &name) const {
+		if (json_["modules"][index].contains(name)) {
+			return json_["modules"][index][name];
+		} else {
+			for (size_t i = 0; i < json_["templates"].size(); ++i) {
+				if (
+					json_["templates"][i]["name"] == 
+					json_["modules"][index]["template"]
+				) {
+					return json_["templates"][i][name];
+				}
+			}
+			throw RXError("Should not be here in GetBootFile.");
+		}
+	}
+
+
 	/// @brief get the boot file version
 	///
 	/// @param[in] index index of module
 	/// @returns version of boot file
 	///
 	inline std::string Version(size_t index) const {
-		return GetBootFile(index, "version");
+		return GetBootInfo<std::string>(index, "version");
 	}
 
 	
@@ -130,17 +181,7 @@ public:
 	/// @returns path of boot file
 	///
 	inline std::string Ldr(size_t index) const {
-		return GetBootFile(index, "ldr");
-	}
-
-
-	/// @brief get boot file par path by index
-	///
-	/// @param[in] index 
-	/// @returns path of boot file
-	///
-	inline std::string Par(size_t index) const {
-		return GetBootFile(index, "par");
+		return GetBootInfo<std::string>(index, "ldr");
 	}
 
 
@@ -150,7 +191,7 @@ public:
 	/// @returns path of boot file
 	///
 	inline std::string Var(size_t index) const {
-		return GetBootFile(index, "var");
+		return GetBootInfo<std::string>(index, "var");
 	}
 
 
@@ -160,7 +201,7 @@ public:
 	/// @returns path of boot file
 	///
 	inline std::string Fippi(size_t index) const {
-		return GetBootFile(index, "fippi");
+		return GetBootInfo<std::string>(index, "fippi");
 	}
 
 
@@ -170,17 +211,7 @@ public:
 	/// @returns path of boot file
 	///
 	inline std::string Sys(size_t index) const {
-		return GetBootFile(index, "sys");
-	}
-
-
-	/// @brief get boot file trig path by index
-	///
-	/// @param[in] index 
-	/// @returns path of boot file
-	///
-	inline std::string Trig(size_t index) const {
-		return GetBootFile(index, "trig");
+		return GetBootInfo<std::string>(index, "sys");
 	}
 
 
@@ -193,7 +224,7 @@ public:
 	/// @returns run number
 	///
 	inline unsigned int RunNumber() const noexcept {
-		return run_information_.run_number;
+		return json_["run"]["number"];
 	}
 
 
@@ -202,7 +233,7 @@ public:
 	/// @param[in] run_number run number for next run  
 	///
 	inline void SetRunNumber(unsigned int run_number) noexcept {
-		run_information_.run_number = run_number;
+		json_["run"]["number"] = run_number;
 	}
 
 
@@ -211,7 +242,7 @@ public:
 	/// @returns run data path
 	/// 
 	inline std::string RunDataPath() const noexcept {
-		return run_information_.data_path;
+		return json_["run"]["dataPath"];
 	}
 
 
@@ -220,7 +251,7 @@ public:
 	/// @param[in] path run data path
 	///
 	inline void SetRunDataPath(const std::string &path) noexcept {
-		run_information_.data_path = path;
+		json_["run"]["dataPath"] = path;
 	}
 
 
@@ -229,7 +260,7 @@ public:
 	/// @returns run data file name prefix
 	/// 
 	inline std::string RunDataFile() const noexcept {
-		return run_information_.data_file;
+		return json_["run"]["dataFile"];
 	}
 
 
@@ -238,7 +269,7 @@ public:
 	/// @param[in] prefix run data file name prefix
 	///
 	inline void SetRunDataFile(const std::string &prefix) noexcept {
-		run_information_.data_file = prefix;
+		json_["run"]["dataFile"] = prefix;
 	}
 	
 
@@ -250,56 +281,35 @@ public:
 
 private:
 
-	// module information
-	struct ModuleInfo {
-		unsigned short slot;								// physical slot
-		nlohmann::json *boot_template;						// boot template
-		std::map<std::string, std::string> boot_files;		// boot files
-		std::string version;								// version
-		unsigned short revision;							// module revision
-		unsigned short rate;								// module sampling rate
-		unsigned short bits;								// module ADC bits
-		// unsigned int ModSerNum;							// module serial number
-	};
-	
-	// run information
-	struct RunInfo {
-		unsigned int run_number;
-		std::string data_path;
-		std::string data_file;
-	};
-
-	/// @brief get boot file path of module by index and boot file kind
+	/// @brief check top level parameters
 	///
-	/// @param[in] index index of module
-	/// @returns path of boot file
+	/// @throws runtime_error if lack of parameter or invalid value
 	///
-	std::string GetBootFile(size_t index, const std::string &name) const;
+	void CheckTopLevelParameters();
 
 
-	// parameter names to check
-	// parameter names in top level
-	static const std::string top_level_parameters_[];
-	// parameter names in template
-	static const std::string boot_files_[];
-	static const std::string firmware_versions_[];
-	// parameter names in crate
-	static const std::string crate_parameters_[];
-	// parameter names in run
-	static const std::string run_parameters_[];
-	
-	// crate information
-	std::string message_level_;
-	unsigned short crate_id_;
-	unsigned short module_num_;
+	/// @brief check parameters of template
+	///
+	/// @throws runtime_error if lack of parameter or invalid value
+	///
+	void CheckTemplatesParameters();
 
-	// module information
-	ModuleInfo module_information_[kModuleNum];
-	// module boot templates
-	std::map<std::string, nlohmann::json> boot_templates_;
 
-	// run information
-	RunInfo run_information_;
+	/// @brief check parameters of module
+	///
+	/// @throws runtime_error if lack of parameter or invalid value
+	///
+	void CheckModulesParameters();
+
+
+	/// @brief check parameters for run
+	///
+	/// @throws runtime_error if lack of parameter or invalid value
+	///
+	void CheckRunParameters();
+
+	// json data
+	nlohmann::json json_;
 };
 
 

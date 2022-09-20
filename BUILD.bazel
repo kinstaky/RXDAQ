@@ -24,7 +24,7 @@ cc_library(
 	hdrs = ["include/config.h"],
 	includes = ["include"],
 	copts = ["-std=c++17"],
-	deps = ["@json//:json"],
+	deps = ["@json//:json", "error"],
 	visibility = ["//visibility:public"]
 )
 
