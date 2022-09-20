@@ -71,6 +71,62 @@ public:
 		EmptyReply *reply
 	);
 
+
+	/// @brief import parameters from json file
+	///
+	/// @param[in] context extra context from client
+	/// @param[in] request includes parameter name, module, channel and value
+	/// @param[out] reply includes
+	/// @returns grpc status
+	///
+	grpc::Status ImportParameters(
+		grpc::ServerContext *context,
+		const ImportExportRequest *request,
+		EmptyReply *reply
+	);
+
+
+	/// @brief export parameters to json file
+	///
+	/// @param[in] context extra context from client
+	/// @param[in] request includes parameter name, module, channel and value
+	/// @param[out] reply includes
+	/// @returns grpc status
+	///
+	grpc::Status ExportParameters(
+		grpc::ServerContext *context,
+		const ImportExportRequest *request,
+		EmptyReply *reply
+	);
+
+
+	/// @brief start list mode run
+	///
+	/// @param[in] context extra context from client
+	/// @param[in] request includes parameter name, module, channel and value
+	/// @param[out] reply includes
+	/// @returns grpc status
+	///
+	grpc::Status StartRun(
+		grpc::ServerContext *context,
+		const RunRequest *request,
+		RunReply *reply
+	);
+
+
+	/// @brief stop list mode run
+	///
+	/// @param[in] context extra context from client
+	/// @param[in] request includes parameter name, module, channel and value
+	/// @param[out] reply includes
+	/// @returns grpc status
+	///
+	grpc::Status StopRun(
+		grpc::ServerContext *context,
+		const EmptyMessage *request,
+		RunReply *reply
+	);
+
 private:
 	std::shared_ptr<Crate> crate_;
 };

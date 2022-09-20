@@ -1,5 +1,6 @@
 #include "include/interactor.h"
 
+#include <csignal>
 #include <iostream>
 #include <thread>
 
@@ -125,6 +126,8 @@ void HelpCommandParser::Run(std::shared_ptr<Crate> crate) {
 // 								RpcCommandParser
 //-----------------------------------------------------------------------------
 
+std::unique_ptr<grpc::Server> RpcCommandParser::server_ = nullptr;
+
 RpcCommandParser::RpcCommandParser() noexcept
 : Interactor(CommandName(), "launch rpc server") {
 
@@ -155,6 +158,12 @@ RpcCommandParser::RpcCommandParser() noexcept
 		);
 	options_.parse_positional({"host_pos", "port_pos"});
 	options_.positional_help("[host] [port]");
+}
+
+
+RpcCommandParser::~RpcCommandParser() {
+	server_ = nullptr;
+	std::cout << "delete rpc command parser" << std::endl;
 }
 
 
@@ -205,10 +214,12 @@ void RpcCommandParser::Run(std::shared_ptr<Crate> crate) {
 	);
 	builder.RegisterService(&service);
 
-	std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+	server_ = builder.BuildAndStart();
 	std::cout << "Rpc server listening on " << host_ << ":" << port_ << "\n";
 
-	server->Wait(); 
+
+	// signal(SIGINT, SigIntHandler);
+	server_->Wait();
 }
 
 
@@ -423,8 +434,8 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 		std::cout << crate->ListParameters();
 		return;
 	}
+
 	auto type = crate->CheckParameter(name_);
-	std::cout << "parameter type " << int(type) << "\n";
 	if (type == ParameterType::kInvalid) {
 		throw UserError("Invalid paraemter" + name_ + ".\n");
 	} else if (type == ParameterType::kModule) {
@@ -471,7 +482,7 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 		for (const auto &m : modules) {
 			std::cout << std::setw(6) << m;
 			for (size_t c = 0; c < channels.size(); ++c, ++value_iter) {
-				std::cout << std::setw(8) << *value_iter;
+				std::cout << "  " << std::setfill(' ') << std::setw(6) << *value_iter;
 			}
 			std::cout << "\n";
 		}
@@ -606,8 +617,6 @@ void WriteCommandParser::Parse(int argc, char **argv) {
 
 void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	// crate->Boot(module_, true);
-
 
 	if (name_.empty()) {
 		std::cout << crate->ListParameters();
@@ -702,7 +711,6 @@ void ImportCommandParser::Parse(int argc, char **argv) {
 
 void ImportCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();
-	crate->Boot(crate->ModuleNum(), true);
 	crate->ImportParameters(parameter_config_path_);
 }
 
@@ -768,7 +776,6 @@ void ExportCommandParser::Parse(int argc, char** argv) {
 
 void ExportCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->Initialize();	
-	crate->Boot(crate->ModuleNum(), true);
 	crate->ExportParameters(parameter_config_path_);
 }
 
@@ -867,10 +874,9 @@ void RunCommandParser::Parse(int argc, char **argv) {
 }
 
 void RunCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize();
 	crate->StartRun(module_, seconds_, run_);
 }
-
-
 
 
 

@@ -10,8 +10,8 @@ http_archive(
 # xiallc pixiesdk
 http_archive(
 	name = "PixieSDK",
-	urls = ["https://github.com/xiallc/pixiesdk/archive/eb66fbd4b701deb775bcc05888be7c0ba12c79fe.zip"],
-	strip_prefix = "PixieSDK-eb66fbd4b701deb775bcc05888be7c0ba12c79fe",
+	urls = ["https://github.com/xiallc/pixiesdk/archive/27ba537b4acb87a1911af9514a89f092b33b50d8.zip"],
+	strip_prefix = "PixieSDK-27ba537b4acb87a1911af9514a89f092b33b50d8",
 	build_file = "@//:bazel/build_pixie_sdk.bazel"
 )
 

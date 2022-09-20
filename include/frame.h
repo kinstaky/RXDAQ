@@ -39,7 +39,7 @@ public:
 	///
 	/// @param[in] crate pointer to the interactor
 	///
-	inline void SetInteractor(std::shared_ptr<Crate> &crate) {
+	inline void SetCrate(std::shared_ptr<Crate> &crate) {
 		crate_ = crate;
 	}
 

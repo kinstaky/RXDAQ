@@ -173,4 +173,98 @@ grpc::Status ControlCrateService::WriteParameter(
 }
 
 
+grpc::Status ControlCrateService::ImportParameters(
+	grpc::ServerContext *,
+	const ImportExportRequest *request,
+	EmptyReply *reply
+) {
+
+	return HandleError(
+		[](
+			EmptyReply*,
+			std::shared_ptr<Crate> crate,
+			const std::string &path 
+		) {
+			crate->ImportParameters(path);
+		},
+		reply,
+		crate_,
+		request->path()
+	);
+}
+
+
+grpc::Status ControlCrateService::ExportParameters(
+	grpc::ServerContext *,
+	const ImportExportRequest *request,
+	EmptyReply *reply
+) {
+
+	return HandleError(
+		[](
+			EmptyReply*,
+			std::shared_ptr<Crate> crate,
+			const std::string &path
+		) {
+			crate->ExportParameters(path);
+		},
+		reply,
+		crate_,
+		request->path()
+	);
+}
+
+
+grpc::Status ControlCrateService::StartRun(
+	grpc::ServerContext*,
+	const RunRequest *request,
+	RunReply *reply
+) {
+
+	return HandleError(
+		[](
+			RunReply *reply,
+			std::shared_ptr<Crate> crate,
+			unsigned short module,
+			unsigned int seconds,
+			int run
+		) {
+			auto start_time = std::chrono::steady_clock::now();
+			crate->StartRun(module, seconds, run);
+			auto stop_time = std::chrono::steady_clock::now();
+			reply->set_seconds(
+				std::chrono::duration_cast<std::chrono::seconds>(
+					stop_time - start_time
+				).count()
+			);
+			reply->set_run_number(crate->RunNumber()-1);
+		},
+		reply,
+		crate_,
+		request->module(),
+		request->seconds(),
+		request->run_number()
+	);
+}
+
+
+grpc::Status ControlCrateService::StopRun(
+	grpc::ServerContext *,
+	const EmptyMessage *,
+	RunReply *reply
+) {
+
+	return HandleError(
+		[](
+			RunReply *,
+			std::shared_ptr<Crate> crate
+		) {
+			crate->StopRun();
+		},
+		reply,
+		crate_
+	);
+}
+
+
 }	 	// namespace rxdaq

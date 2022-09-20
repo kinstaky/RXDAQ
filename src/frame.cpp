@@ -49,7 +49,10 @@ void Frame::Run() {
 		exit(-1);
 	}
 	// create crate if needed
-	if (interactor_->Type() == Interactor::InteractorType::kRpcCommandParser) {
+	if (
+		interactor_->Type() == Interactor::InteractorType::kRpcCommandParser ||
+		interactor_->Type() == Interactor::InteractorType::kUndefined
+	) {	
 		crate_ = std::make_shared<Crate>();
 	} else if (interactor_->Type() != Interactor::InteractorType::kHelpCommandParser) {
 		crate_ = std::make_shared<RemoteCrate>(

@@ -43,7 +43,7 @@ public:
 	///
 	/// @throws XiaError if initialize failed
 	///
-	virtual void Initialize(const std::string &);
+	virtual void Initialize(const std::string &) override;
 
 
 	/// @brief boot modules
@@ -51,7 +51,7 @@ public:
 	/// @param[in] module_id module to boot 
 	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
 	///
-	virtual void Boot(unsigned short module_id, bool fast = true);
+	virtual void Boot(unsigned short module_id, bool fast = true) override;
 	
 
 	// //-------------------------------------------------------------------------
@@ -68,7 +68,7 @@ public:
 	virtual unsigned int ReadParameter(
 		const std::string &name,
 		unsigned short module
-	);
+	) override;
 
 
 	/// @brief read channel parameters
@@ -82,7 +82,7 @@ public:
 		const std::string &name,
 		unsigned short module,
 		unsigned short channel
-	);
+	) override;
 
 
 	/// @brief write module parameter
@@ -95,7 +95,7 @@ public:
 		const std::string &name,
 		unsigned int value,
 		unsigned short module
-	);
+	) override;
 
 
 	/// @brief write channel parameter
@@ -110,45 +110,63 @@ public:
 		double value,
 		unsigned short module,
 		unsigned short channel
-	);
+	) override;
 
 
-	// /// @brief import parameters from json file
-	// ///
-	// /// @param[in] path path to import
-	// /// 
-	// virtual void ImportParameters(const std::string &path);
+	/// @brief import parameters from json file
+	///
+	/// @param[in] path path to import
+	/// 
+	virtual void ImportParameters(const std::string &path) override;
 	
 	
-	// /// @brief export parameters to json file
-	// ///
-	// /// @param path path to export
-	// /// 
-	// virtual void ExportParameters(const std::string &path);
+	/// @brief export parameters to json file
+	///
+	/// @param path path to export
+	/// 
+	virtual void ExportParameters(const std::string &path) override;
 
 
-	// /// @brief start list mode run
-	// ///
-	// /// @param[in] module_id module to run in list mode 
-	// /// @param[in] seconds seconds to run, 0 for infinite time
-	// /// @param[in] run run number, -1 to read from config file
-	// ///
-	// virtual void StartRun(
-	// 	unsigned short module_id,
-	// 	unsigned int seconds,
-	// 	int run
-	// );
+	/// @brief start list mode run
+	///
+	/// @param[in] module_id module to run in list mode 
+	/// @param[in] seconds seconds to run, 0 for infinite time
+	/// @param[in] run run number, -1 to read from config file
+	///
+	virtual void StartRun(
+		unsigned short module_id,
+		unsigned int seconds,
+		int run
+	) override;
 
 
-	// /// @brief stop list mode run
-	// ///
-	// /// @param[in] module_id module to stop
-	// ///
-	// virtual void StopRun(unsigned short module_id);
+	/// @brief stop list mode run
+	///
+	/// @param[in] module_id module to stop
+	///
+	virtual void StopRun() override;
+
+
 
 private:
+
+	struct AsyncClientCall {
+		int type;
+		std::unique_ptr<grpc::ClientAsyncResponseReader<RunReply>> reader;
+		grpc::ClientContext context;
+		RunReply reply;
+		grpc::Status status;
+	};
+
+
+	/// @brief signal INT handler, stop the list mode run
+	///  
+	static void SigIntHandler(int);
+
 	unsigned short module_num_;
 	std::unique_ptr<ControlCrate::Stub> stub_;
+	static RemoteCrate *instance_;
+	grpc::CompletionQueue completion_queue_;
 };
 
 }		// namespace rxdaq

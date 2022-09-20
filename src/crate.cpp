@@ -1,3 +1,5 @@
+#include <csignal>
+
 #include <vector>
 #include <fstream>
 #include <iostream>
@@ -22,10 +24,26 @@ const size_t kFifoRunWaitUsecs = 2000;
 const size_t kFifoIdleWaitUsecs = 150000;
 const size_t kFifoHoldUsecs = 50000;
 
+std::atomic<bool> Crate::keep_running_ = false;
 
 Crate::Crate() noexcept
-: message_(Message::Level::kWarning), config_path_("config.json") {
+: message_(Message::Level::kWarning), booted_(false), config_path_("config.json") {
 	message_.SetColorfulPrefix();
+}
+
+
+Crate::~Crate() {
+	std::cout << message_(MsgLevel::kDebug) << "Crate::~Crate()\n";
+	if (booted_) {
+		std::cout << message_(MsgLevel::kInfo) << "Closing modules...\n";
+		
+		xia_crate_.ready();
+		for (unsigned short i = 0; i < ModuleNum(); ++i) {
+			xia::pixie::crate::module_handle module(xia_crate_, i,
+                xia::pixie::crate::module_handle::present);
+			module->close();
+		}
+	}
 }
 
 
@@ -38,6 +56,9 @@ void Crate::Initialize(const std::string &config_path) {
 	message_.SetLevel(Message::ToLevel(config_.MessageLevel()));
 
 	std::cout << message_(MsgLevel::kDebug) << "Crate::Init().\n";
+
+	xia::logging::start("log", "Pixie16Msg.log", true);
+	xia::logging::set_level(xia::log::warning);
 
 	// xia crate init
 	xia_crate_.initialize();
@@ -81,12 +102,8 @@ void Crate::LoadFirmware(unsigned short module_id) {
 	std::cout << message_(MsgLevel::kDebug)
 		<< "Crate::LoadFirmware(" << module_id << ")\n";
 
-	// add crate user
-	xia::pixie::crate::crate::user user(xia_crate_);
-
 	// check module firmware information before boot
 	xia::pixie::module::module &module = *(xia_crate_.modules[module_id]);
-	// xia::pixie::crate::module_handle module(xia_crate_, module_id, xia::pixie::crate::module_handle::present);
 	if (module.eeprom.revision != config_.Revision(module_id)) {
 		std::stringstream ss;
 		ss << "Revision of module " << module_id << " is " << module.revision
@@ -147,27 +164,24 @@ void Crate::LoadFirmware(unsigned short module_id) {
 		firmwares[i]->slot.push_back(config_.Slot(module_id));
 	}
 	firmwares_lock_.unlock();
-
+	
 	for (auto &firmware : firmwares) {
 		module.firmware.push_back(firmware);
 	}
+
+	// xia::pixie::firmware::firmware firmwares[4] = {
+	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[0]},
+	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[1]},
+	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[2]},
+	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[3]}
+	// };
+	// for (size_t i = 0; i < 4; ++i) {
+	// 	firmwares[i].filename = firmware_files[i];
+	// 	firmwares[i].slot.push_back(config_.Slot(module_id));
+	// 	xia::pixie::firmware::add(xia_crate_.firmware, firmwares[i]);
+	// }
 }
 
-
-void Crate::BootModule(unsigned short module_id, bool fast) {
-	std::cout << message_(MsgLevel::kDebug)
-		<< "Crate::BootModule(" << module_id << ", " << fast << ").\n";
-
-	LoadFirmware(module_id);
-	
-	xia::pixie::crate::module_handle module(
-		xia_crate_, module_id, xia::pixie::crate::module_handle::present
-	);
-	
-	if (!fast || !module->online()) {
-		module->boot();
-	}
-}
 
 void Crate::Boot(unsigned short module_id, bool fast) {
 	std::cout << message_(MsgLevel::kDebug)
@@ -177,69 +191,28 @@ void Crate::Boot(unsigned short module_id, bool fast) {
 	if (module_id == kModuleNum) {
 		std::vector<std::thread> threads;
 		for (unsigned short i = 0; i < ModuleNum(); ++i) {
-			threads.emplace_back(&Crate::BootModule, this, i, fast);
+			threads.emplace_back(&Crate::LoadFirmware, this, i);
 		}
 		for (auto &t : threads) {
 			t.join();
 		}
 	} else {
-		BootModule(module_id, fast);
+		LoadFirmware(module_id);
 	}
-	if (!fast) {
-		ImportParameters(config_.Par(0));
-	}
-}
 
-
-// void Crate::BootCrate(bool fast) {
-// 	std::cout << message_(MsgLevel::kDebug)
-// 		<< "Crate::BootCrate(" << fast << ")\n";
-
-// 	xia_crate_.ready();
-	
-// 	if (fast) {
-// 		xia_crate_.boot(false);
-// 	} else {
-// 		xia_crate_.boot(true);
-// 		ImportParameters(config_.Par(0));
-// 	}
-// }
-
-
-// // The function is edited from PixieRegisterFirmware, but the origin function
-// // create the firmware for twice. So I edit it and create only once.
-// void Crate::Boot(unsigned short module_id, unsigned short boot_pattern) {
-// 	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot(" << module_id
-// 		<< ", 0x" << std::hex << boot_pattern << std::dec << ")\n"; 
-
-
-// 	LoadFirmware(module_id);
-
-// 	xia::pixie::crate::crate::user user(xia_crate_);
-// 	// check module firmware information before boot
-// 	xia::pixie::module::module &module = *(xia_crate_.modules[module_id]);
-
-// 	const int kBOOT_COMFPGA = 0x1;
-// 	const int kBOOT_SPFPGA = 0x2;
-// 	const int kBOOT_DSPCODE = 0x4;
-
-// 	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot: booting module...\n";
-
-// 	// now boot module
-// 	module.probe();
-// 	module.boot(
-// 		boot_pattern & kBOOT_COMFPGA,
-// 		boot_pattern & kBOOT_SPFPGA,
-// 		boot_pattern & kBOOT_DSPCODE
-// 	);
-
-	// if (boot_pattern & kBOOT_DSPPAR) {
-	// 	ImportParameters(config_.Par(module_id));
+	// std::vector<unsigned short> modules = CreateRequestIndexes(kModuleNum, ModuleNum(), module_id);
+	// for (const auto &m : modules) {
+	// 	LoadFirmware(m);
 	// }
 
-// 	std::cout << message_(MsgLevel::kDebug) << "Crate::Boot() finish.\n";
-// 	return;
-// }
+	xia_crate_.ready();
+	xia_crate_.set_firmware();
+	xia_crate_.boot(!fast);
+
+	ImportParameters(config_.Par(0));
+	booted_ = true;
+}
+
 
 
 //-----------------------------------------------------------------------------
@@ -376,6 +349,7 @@ void Crate::ImportParameters(const std::string &path) {
 
 	xia::pixie::module::number_slots loaded;
 	xia_crate_.import_config(path, loaded);
+	xia_crate_.initialize_afe();
 
 	// try {
 	// 	std::cout << message_(MsgLevel::kDebug)
@@ -398,8 +372,6 @@ void Crate::ImportParameters(const std::string &path) {
 	// 		throw xia::pixie::error::error(e.type, e.what());
 	// 	}
 	// }
-
-
 }
 
 
@@ -473,13 +445,9 @@ void Crate::StartRun(unsigned short module_id, unsigned int seconds, int run) {
 	std::vector<unsigned short> modules =
 		CreateRequestIndexes(kModuleNum, ModuleNum(), module_id);
 
-	if (module_id == kModuleNum) {
-		WriteParameter("SYNCH_WAIT", 1, 0);
-		WriteParameter("IN_SYNCH", 0, 0);
-	} else {
-		WriteParameter("SYNCH_WAIT", 0, 0);
-		WriteParameter("IN_SYNCH", 0, module_id);
-	}
+
+	WriteParameter("SYNCH_WAIT", module_id == kModuleNum ? 1 : 0, 0);
+	WriteParameter("IN_SYNCH", 0, 0);
 
 	// create directory for data files
 	std::string dir_name =
@@ -501,9 +469,14 @@ void Crate::StartRun(unsigned short module_id, unsigned int seconds, int run) {
 	}
 
 	// get data
+	keep_running_ = true;
 	run_start_time_ = std::chrono::steady_clock::now();
 	auto stop_time = run_start_time_;
-	while (!seconds || ClockDuration(run_start_time_, stop_time) < seconds) {
+	signal(SIGINT, SigIntHandler);
+	while (
+		keep_running_ && 
+		(!seconds || ClockDuration(run_start_time_, stop_time) < seconds)
+	) {
 		for (const auto &m : modules) {
 			if (xia_crate_.modules[m]->run_active()) {
 				ReadListModeData(m, 131072.0*0.2);
@@ -512,17 +485,25 @@ void Crate::StartRun(unsigned short module_id, unsigned int seconds, int run) {
 					<< "Module " << m << " has not active run.\n";
 			}
 		}
+		stop_time = std::chrono::steady_clock::now();
 	}
+	signal(SIGINT, SIG_DFL);
 
-	StopRun(module_id);
+	FinishRun(module_id);
 }
 
 
 void Crate::WaitFinished(const std::vector<unsigned short> &modules) {
+	std::cout << message_(MsgLevel::kDebug)
+		<< "Crate::WaitFinished(...),  Waiting all modules to finish...\n";
+
 	const unsigned int max_attempts = 30;
 	// check finished
 	bool finished = false;
 	for (unsigned int count = 0; count < max_attempts; ++count) {
+		std::cout << message_(MsgLevel::kDebug)
+			<< "Finish attempt " << count << "\n";
+
 		finished = true;
 		for (const auto &m : modules) {
 			if (xia_crate_.modules[m]->run_active()) {
@@ -539,11 +520,11 @@ void Crate::WaitFinished(const std::vector<unsigned short> &modules) {
 
 
 
-void Crate::StopRun(unsigned short module_id) {
+void Crate::FinishRun(unsigned short module_id) {
 	std::cout << message_(MsgLevel::kDebug)
-		<< "StopRun(" << module_id << ")\n";
+		<< "FinishRun(" << module_id << ")\n";
 	std::cout << message_(MsgLevel::kInfo)
-		<< "Stopping list mode run.\n";
+		<< "Finishing list mode run.\n";
 
 	xia_crate_.ready();
 
@@ -580,8 +561,8 @@ void Crate::StopRun(unsigned short module_id) {
 	) + "parameters.json");
 
 	// update run number and save
-	config_.SetRunNumber(config_.RunNumber()+1);
-	ExportParameters(config_path_);
+	config_.SetRunNumber(config_.RunNumber() + 1);
+	config_.WriteToFile(config_path_);
 }
 
 
@@ -595,6 +576,9 @@ void Crate::ReadListModeData(
 		static_cast<unsigned int>(module->read_list_mode_level());
 
 	if (fifo_words > threshold) {
+		std::cout << message_(MsgLevel::kDebug)
+			<< "ReadListModeData(" << module_id << ", " << threshold << ")\n";
+
 		xia::pixie::hw::words data(fifo_words);
 		module->read_list_mode(data);
 		run_output_streams_[module_id].write(
@@ -610,17 +594,19 @@ void Crate::ReadListModeData(
 //-----------------------------------------------------------------------------
 
 
-std::string RunTimeInfo(unsigned int duration) {
+std::string RunTimeInfo(unsigned int duration, int run) {
 	std::string result;
 	unsigned int seconds = duration;
 	unsigned int minutes = seconds / 60;
 	unsigned int hours = minutes / 60;
 	minutes %= 60;
 	seconds %= 3600;
-	result = "List mode run finished in "
+	result = "List mode run "
+		+ (run == -1 ? "\b" : std::to_string(run))
+		+ " finished in "
 		+ (hours ? std::to_string(hours) + ":" : "")
 		+ (minutes ? std::to_string(minutes) + ":" : "")
-		+ std::to_string(seconds) + ".\n";
+		+ std::to_string(seconds) + "s.\n";
 	return result;
 }
 

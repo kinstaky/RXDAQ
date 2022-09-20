@@ -7,8 +7,14 @@ namespace rxdaq {
 // 								MessageOstream
 //-----------------------------------------------------------------------------
 
-MessageOstream::MessageOstream(std::ostream &os, bool print, std::mutex &lock)
+MessageOstream::MessageOstream(
+	std::ostream &os,
+	bool print,
+	std::mutex &lock,
+	const std::string &prefix
+)
 : os_(os), print_(print), guard_(lock) {
+	os << prefix;
 }
 
 
@@ -62,11 +68,11 @@ MessageOstream operator<<(std::ostream &os, Message &message) {
 			}
 		}
 	}
-	os << content;
 	return MessageOstream(
 		os,
 		message.printing_level_ <= message.intrinsic_level_,
-		message.lock_
+		message.lock_,
+		content
 	);
 }
 

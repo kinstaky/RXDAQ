@@ -1,6 +1,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+// #include <unistd.h>
 #include <string>
 #include <map>
 
@@ -78,6 +79,7 @@ public:
 	// 				firmware version information
 	//-------------------------------------------------------------------------
 
+
 	/// @brief get revision of module by index
 	///
 	/// @param[in] index index of module
@@ -111,6 +113,16 @@ public:
 	//-------------------------------------------------------------------------
 	// 								boot files
 	//-------------------------------------------------------------------------
+
+	/// @brief get the boot file version
+	///
+	/// @param[in] index index of module
+	/// @returns version of boot file
+	///
+	inline std::string Version(size_t index) const {
+		return GetBootFile(index, "version");
+	}
+
 	
 	/// @brief get boot file ldr path by index
 	///
@@ -243,6 +255,7 @@ private:
 		unsigned short slot;								// physical slot
 		nlohmann::json *boot_template;						// boot template
 		std::map<std::string, std::string> boot_files;		// boot files
+		std::string version;								// version
 		unsigned short revision;							// module revision
 		unsigned short rate;								// module sampling rate
 		unsigned short bits;								// module ADC bits

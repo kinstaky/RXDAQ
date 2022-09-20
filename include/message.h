@@ -16,8 +16,14 @@ public:
 	/// @param[in] os ostream to write message
 	/// @param[in] print whether to print message(since level control)
 	/// @param[in] lock reference to lock of Message object
+	/// @param[in] prefix prefix of message
 	///
-	MessageOstream(std::ostream &os, bool print, std::mutex &lock);
+	MessageOstream(
+		std::ostream &os,
+		bool print,
+		std::mutex &lock,
+		const std::string &prefix
+	);
 
 	
 	/// @brief default destructor

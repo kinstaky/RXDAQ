@@ -2,7 +2,7 @@
 FetchContent_Declare(
 	pixie_sdk
 	GIT_REPOSITORY https://github.com/xiallc/PixieSDK.git
-	GIT_TAG eb66fbd4b701deb775bcc05888be7c0ba12c79fe
+	GIT_TAG 27ba537b4acb87a1911af9514a89f092b33b50d8
 )
 FetchContent_MakeAvailable(pixie_sdk)
 

@@ -7,7 +7,10 @@ service ControlCrate {
 	rpc Boot (BootRequest) returns (EmptyReply) {}
 	rpc ReadParameter (ReadRequest) returns (ReadReply) {}
 	rpc WriteParameter (WriteRequest) returns (EmptyReply) {}
-	// rpc Run (RunRequest) returns (RunReply) {}
+	rpc ImportParameters (ImportExportRequest) returns (EmptyReply) {}
+	rpc ExportParameters (ImportExportRequest) returns (EmptyReply) {}
+	rpc StartRun (RunRequest) returns (RunReply) {}
+	rpc StopRun (EmptyMessage) returns (RunReply) {}
 }
 
 enum ExceptionType {
@@ -59,4 +62,24 @@ message WriteRequest {
 	double channel_value = 4;
 	uint32 module = 5;
 	uint32 channel = 6;
+}
+
+
+message ImportExportRequest {
+	string path = 1;
+}
+
+
+message RunRequest {
+	uint32 module = 1;
+	uint32 seconds = 2;
+	int32 run_number = 3;
+}
+
+
+message RunReply {
+	uint32 seconds = 1;
+	int32 run_number = 2;
+	ExceptionType exception_type = 3;
+	string message = 4;
 }

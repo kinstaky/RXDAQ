@@ -6,3 +6,10 @@ cc_binary(
 	copts = ["-std=c++17"],
 	deps = ["@//:frame"]
 )
+
+cc_binary(
+	name = "batch_mode",
+	srcs = ["batch_mode.cpp"],
+	copts = ["-std=c++17"],
+	deps = ["@//:frame"]
+)

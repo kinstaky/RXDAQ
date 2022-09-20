@@ -25,6 +25,7 @@ const std::string Config::boot_files_[] = {
 };
 
 const std::string Config::firmware_versions_[] = {
+	"version",					// version
 	"rev",						// revision
 	"rate",						// sampling rate
 	"bits",						// ADC bits
@@ -151,6 +152,7 @@ void Config::ReadFromFile(const std::string &file_name) {
 				}
 			}
 			// all parameters describe firmware version exists, record them
+			module_information_[is].version = im["veresion"];
 			module_information_[is].revision = im["rev"];
 			module_information_[is].bits = im["bits"];
 			module_information_[is].rate = im["rate"];
@@ -208,7 +210,7 @@ void Config::WriteToFile(const std::string &file_name) {
 	json["messageLevel"] = message_level_;
 	json["crateId"] = crate_id_;
 	for (const auto &[key, value] : boot_templates_) {
-		json["templates"].push_back(key);
+		json["templates"].push_back(value);
 	}
 	for (unsigned short i = 0; i < module_num_; ++i) {
 		ModuleInfo &info = module_information_[i];
@@ -222,6 +224,9 @@ void Config::WriteToFile(const std::string &file_name) {
 		}
 		json["modules"].push_back(module);
 	}
+	json["run"]["dataPath"] = run_information_.data_path;
+	json["run"]["dataFile"] = run_information_.data_file;
+	json["run"]["number"] = run_information_.run_number;
 
 	fout << json.dump(4) << std::endl;
 }

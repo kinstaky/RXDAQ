@@ -6,6 +6,8 @@
 #include "include/crate.h"
 #include "cxxopts.hpp"
 
+#include <grpcpp/grpcpp.h>
+
 namespace rxdaq {
 
 /// This class is base class of interactors. Interactors get commands or
@@ -41,7 +43,10 @@ public:
 	/// @param[in] name name of the program
 	/// @param[in] help description of the help information
 	///
-	Interactor(const std::string &name, const std::string &help) noexcept;
+	Interactor(
+		const std::string &name = "interactor",
+		const std::string &help = ""
+	) noexcept;
 
 
 	/// @brief default destructor
@@ -72,7 +77,9 @@ public:
 	/// @param[in] argc the number of arguments
 	/// @param[in] argv the arguments
 	///
-	virtual void Parse(int argc, char **argv) = 0;
+	inline virtual void Parse(int, char **) {
+		return;
+	}
 
 
 	/// @brief abstract method to run the interactor
@@ -161,7 +168,14 @@ public:
 
 	/// @brief default destructor
 	///
-	~RpcCommandParser() = default;
+	~RpcCommandParser();
+
+
+	/// @brief signal interrupt handler
+	///
+	static inline void SigIntHandler(int) {
+		if (server_) server_->Shutdown();
+	}
 
 
 	/// @brief  get the command name
@@ -200,6 +214,8 @@ private:
 	std::string config_path_;
 	std::string host_;
 	std::string port_;
+
+	static std::unique_ptr<grpc::Server> server_;
 };
 
 

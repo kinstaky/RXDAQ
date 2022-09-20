@@ -41,13 +41,14 @@ const std::map<ParameterType, std::string> kParameterTypeNames = {
 class Crate {
 public:
 
-	/// @brief default constructor
+	/// @brief constructor
 	///
 	Crate() noexcept;
 
 
-	/// @brief default destructor
-	virtual ~Crate() = default;
+	/// @brief destructor
+	///
+	virtual ~Crate();
 
 
 	//-------------------------------------------------------------------------
@@ -84,17 +85,6 @@ public:
 	///
 	virtual void Boot(unsigned short module_id, bool fast = true);
 	
-	
-	// /// @brief boot modules in crate
-	// ///
-	// /// @param[in] module_id module to boot
-	// /// @param[in] boot_pattern boot pattern, kFastBoot or kEntireBoot
-	// ///
-	// /// @throws UserError if firmware version of config error
-	// /// @throws XiaError if boot failed
-	// ///
-	// virtual void Boot(unsigned short module_id, unsigned short boot_pattern = kFastBoot);
-
 
 	//-------------------------------------------------------------------------
 	//	 				method to read and write parameters
@@ -185,6 +175,10 @@ public:
 	virtual void ExportParameters(const std::string &path);
 
 
+	//-------------------------------------------------------------------------
+	//	 					method for list mode run
+	//-------------------------------------------------------------------------
+
 	/// @brief start list mode run
 	///
 	/// @param[in] module_id module to run in list mode 
@@ -200,28 +194,20 @@ public:
 
 	/// @brief stop list mode run
 	///
-	/// @param[in] module_id module to stop
+	virtual inline void StopRun() {
+		keep_running_ = false;
+	}
+
+
+	/// @brief get the run number
 	///
-	virtual void StopRun(unsigned short module_id);
+	virtual inline unsigned int RunNumber() const {
+		return config_.RunNumber();
+	}
+
+
 	
 	// virtual void PrintInfo() const;
-	// virtual void SetRunConfig(const std::string &path);
-	// virtual void SetRunConfig(const std::string &path, const std::string &name, unsigned int run);
-
-
-
-	
-
-	// std::string configFile;
-	// int crateID;
-
-	// struct RunConfig {
-	// 	std::string dataPath;
-	// 	std::string dataFileName;
-	// 	unsigned int run;
-	// 	nlohmann::json js;
-	// 	std::string configFile;
-	// } runConfig;
 
 private:
 
@@ -230,14 +216,6 @@ private:
 	/// @param[in] module_id module to load
 	/// 
 	virtual void LoadFirmware(unsigned short module_id);
-
-
-	/// @brief boot one module
-	///
-	/// @param[in] module_id module to boot
-	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
-	/// 
-	virtual void BootModule(unsigned short module_id, bool fast = true);
 
 
 	/// @brief read list mode data from hardware to binary files
@@ -257,11 +235,28 @@ private:
 	void WaitFinished(const std::vector<unsigned short> &modules);
 
 
+	/// @brief do something after run finished
+	///
+	/// @param[in] module_id module to finish
+	///
+	void FinishRun(unsigned short module_id);
+
+
+	static void SigIntHandler(int) {
+		std::cout << "\nYor press Ctrl+C to stop run, press again to quit."
+			 << std::endl;
+		keep_running_ = false;
+	}
+
+
 	// xia crate, the lower level compoment
 	xia::pixie::crate::crate xia_crate_;
 
 	// message output control
 	Message message_;
+
+	// boot flags
+	bool booted_;
 
 	// firmwares and lock
 	std::map<std::string, xia::pixie::firmware::firmware_ref> firmwares_;
@@ -274,15 +269,17 @@ private:
 	// run variables
 	std::vector<std::ofstream> run_output_streams_;
 	std::chrono::steady_clock::time_point run_start_time_;
+	static std::atomic<bool> keep_running_;
 };
 
 
 /// @brief generate run time information
 ///
 /// @param[in] duration duration time in seconds
+/// @param[in] run run number to display, -1 not to display
 /// @returns run time information in string
 ///
-std::string RunTimeInfo(unsigned int duration);
+std::string RunTimeInfo(unsigned int duration, int run = -1);
 
 
 /// @brief create vector of indexes for modules or channels
