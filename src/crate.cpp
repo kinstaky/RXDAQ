@@ -146,8 +146,11 @@ void Crate::LoadFirmware(unsigned short module_id) {
 			
 			// firmware not exist, add new one
 			firmwares[i] = std::make_shared<xia::pixie::firmware::firmware>(
-				"n/a", module.revision, module.eeprom.configs[0].adc_msps,
-				module.eeprom.configs[0].adc_bits, device_name[i]
+				config_.Version(module_id),
+				config_.Revision(module_id),
+				config_.Rate(module_id),
+				config_.Bits(module_id),
+				device_name[i]
 			);
 			
 			// load firmware from file
@@ -168,18 +171,6 @@ void Crate::LoadFirmware(unsigned short module_id) {
 	for (auto &firmware : firmwares) {
 		module.firmware.push_back(firmware);
 	}
-
-	// xia::pixie::firmware::firmware firmwares[4] = {
-	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[0]},
-	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[1]},
-	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[2]},
-	// 	{config_.Version(module_id), config_.Revision(module_id), config_.Rate(module_id), config_.Bits(module_id), device_name[3]}
-	// };
-	// for (size_t i = 0; i < 4; ++i) {
-	// 	firmwares[i].filename = firmware_files[i];
-	// 	firmwares[i].slot.push_back(config_.Slot(module_id));
-	// 	xia::pixie::firmware::add(xia_crate_.firmware, firmwares[i]);
-	// }
 }
 
 

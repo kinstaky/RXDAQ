@@ -22,7 +22,7 @@
     "run": {
         "dataFile": "data",
         "dataPath": "/data/TestData/rxdaq/",
-        "number": 502
+        "number": 501
     },
     "templates": [
         {
