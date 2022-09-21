@@ -34,6 +34,8 @@ std::unique_ptr<Interactor> Interactor::CreateInteractor(const char* name) noexc
 		result = std::make_unique<RpcCommandParser>();
 	} else if (!strcmp(name, "boot")) {
 		result = std::make_unique<BootCommandParser>();
+	} else if (!strcmp(name, "task")) {
+		result = std::make_unique<TaskCommandParser>();
 	// } else if (!strcmp(name, "info")) {
 	// 	result = std::make_unique<InfoCommandParser>();
 	} else if (!strcmp(name, "read")) {
@@ -73,6 +75,7 @@ std::string HelpCommandParser::Help() const noexcept {
 		"  help                  Display help information.\n"
 		"  rpc                   Run as rpc server.\n"
 		"  boot                  Boot modules.\n"
+		"  task                  Process task\n"
 		"  read                  Read parameters.\n"
 		"  write                 Write parameters.\n"
 		"  import                Import parameters.\n"
@@ -217,7 +220,6 @@ void RpcCommandParser::Run(std::shared_ptr<Crate> crate) {
 	server_ = builder.BuildAndStart();
 	std::cout << "Rpc server listening on " << host_ << ":" << port_ << "\n";
 
-
 	// signal(SIGINT, SigIntHandler);
 	server_->Wait();
 }
@@ -236,11 +238,6 @@ BootCommandParser::BootCommandParser() noexcept
 	type_ = InteractorType::kBootCommandParser;
 	options_.add_options()
 		(
-			"module_pos", "Choose module to boot, default is all.",
-			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
-			"id"
-		)
-		(
 			"m,module", "Choose moudle to boot, default is all.",
 			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
 			"<id>"
@@ -249,6 +246,11 @@ BootCommandParser::BootCommandParser() noexcept
 			"config", "Set config file path.",
 			cxxopts::value<std::string>()->default_value("config.json"),
 			"<file>"
+		)
+		(
+			"module_pos", "Choose module to boot, default is all.",
+			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
+			"id"
 		);
 	options_.parse_positional({"module_pos"});
 	options_.positional_help("[module]");
@@ -281,13 +283,8 @@ void BootCommandParser::Parse(int argc, char **argv) {
 	module_ = parse_result["module"].count() ?
 		parse_result["module"].as<int>() :
 		parse_result["module_pos"].as<int>();
-	if (module_ > kModuleNum) {
-		throw UserError("module should smaller than or equal to 13");
-	} else if (module_ < 0) {
-		throw UserError("module should be positive");
-	}
+	CheckModuleNumber(module_);
 
-	
 	return;
 }
 
@@ -307,6 +304,108 @@ void BootCommandParser::Run(std::shared_ptr<Crate> crate) {
 	// } else {
 	// 	crate->Boot(module_, kEntireBoot);
 	// }
+	return;
+}
+
+
+// //-----------------------------------------------------------------------------
+// // 								TaskCommandParser
+// //-----------------------------------------------------------------------------
+
+TaskCommandParser::TaskCommandParser() noexcept
+: Interactor(CommandName(), "process auto tasks")
+, config_path_("config.json")
+, task_name_("")
+, module_(kModuleNum)
+{
+	type_ = InteractorType::kTaskCommandParser;
+	options_.add_options()
+		(
+			"l,list",
+			"list available tasks to process automatically.",
+			cxxopts::value<bool>()
+		)
+		(
+			"n,name",
+			"Choose name of task to process.",
+			cxxopts::value<std::string>()->default_value(""),
+			"<task>"
+		)
+		(
+			"m,module",
+			"Choose module to process task.",
+			cxxopts::value<int>()->default_value(std::to_string(kModuleNum)),
+			"<id>"
+		)
+		(
+			"config",
+			"Set config file path.",
+			cxxopts::value<std::string>()->default_value("config.json"),
+			"<file>"
+		)
+		(
+			"name_pos",
+			"Choose name of task to process.",
+			cxxopts::value<std::string>()->default_value("")
+		)
+		(
+			"module_pos",
+			"Choose module to process task.",
+			cxxopts::value<int>()->default_value(std::to_string(kModuleNum))
+		);
+	options_.parse_positional({"name_pos", "module_pos"});
+	options_.positional_help("[name] [module]");
+}
+
+
+std::string TaskCommandParser::Help() const noexcept {
+	std::string result = options_.help();
+	result += "\n" 
+		"Examples:\n"
+		"  './rxdaq task' or './rxdaq task --list' to list available tasks.\n"
+		"  './rxdaq task offset' to adjust DC offset in all modules.\n"
+		"  './rxdaq task offset 0 to adjust DC offset in module 0.\n"
+		"  or use name arguments './rxdaq task --name offset --module 0' to\n"
+		"  do the same thing.\n";
+	
+	return result;
+}
+
+
+void TaskCommandParser::Parse(int argc, char **argv) {
+	auto parse_result = options_.parse(argc, argv);
+	if (!parse_result.unmatched().empty()) {
+		throw UserError("too many arguments");
+	}
+
+	// get parameters
+	config_path_ = parse_result["config"].as<std::string>();
+
+	task_name_ = parse_result["name"].count() ?
+		parse_result["name"].as<std::string>() :
+		parse_result["name_pos"].as<std::string>();
+	task_name_ = parse_result["list"].count() ? "" : task_name_;
+	
+	module_ = parse_result["module"].count() ?
+		parse_result["module"].as<int>() :
+		parse_result["module_pos"].as<int>();
+	CheckModuleNumber(module_);
+}
+
+
+void TaskCommandParser::Run(std::shared_ptr<Crate> crate) {
+	crate->Initialize();
+	if (task_name_.empty()) {
+		std::cout << crate->ListTasks();
+		return;
+	}
+	
+	std::vector<unsigned short> modules =
+		CreateRequestIndexes(kModuleNum, crate->ModuleNum(), module_);
+
+	for (unsigned short m : modules) {
+		crate->Task(task_name_, m);
+	}
 	return;
 }
 
@@ -386,7 +485,8 @@ ReadCommandParser::ReadCommandParser() noexcept
 
 std::string ReadCommandParser::Help() const noexcept {
 	std::string result = options_.help();
-	result += "Examples:\n"
+	result += "\n"
+		"Examples:\n"
 		"  './rxdaq read' or './rxdaq read --list' to list available parameters.\n"
 		"  './rxdaq read MODULE_CSRA' to read parameter MODULE_CSRA from all modules.\n"
 		"  './rxdaq read MODULE_CSRA 0' to read parameter MODULE_CSRA from module 0.\n"
@@ -418,10 +518,12 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 	module_ = parse_result["module"].count() ?
 		parse_result["module"].as<int>() :
 		parse_result["module_pos"].as<int>();
+	CheckModuleNumber(module_);
 
 	channel_ = parse_result["channel"].count() ?
 		parse_result["channel"].as<int>() :
-		parse_result["channel_pos"].as<int>();	
+		parse_result["channel_pos"].as<int>();
+	CheckChannelNumber(channel_);
 }
 
 
@@ -568,7 +670,8 @@ WriteCommandParser::WriteCommandParser() noexcept
 
 std::string WriteCommandParser::Help() const noexcept {
 	std::string result = options_.help();
-	result += "Examples:\n"
+	result += "\n"
+		"Examples:\n"
 		"  './rxdaq write' or './rxdaq write --list' to list available parameters.\n"
 		"  './rxdaq write MODULE_CSRA 10' to write MODULE_CSRA as 10 to all modules.\n"
 		"  './rxdaq write MODULE_CSRA 10 0' to write MODULE_CSRA as 10 to module 0.\n"
@@ -608,10 +711,12 @@ void WriteCommandParser::Parse(int argc, char **argv) {
 	module_ = parse_result["module"].count() ?
 		parse_result["module"].as<int>() :
 		parse_result["module_pos"].as<int>();
+	CheckModuleNumber(module_);
 
 	channel_ = parse_result["channel"].count() ?
 		parse_result["channel"].as<int>() :
 		parse_result["channel_pos"].as<int>();
+	CheckChannelNumber(channel_);
 }
 
 
@@ -686,7 +791,8 @@ ImportCommandParser::ImportCommandParser() noexcept
 
 std::string ImportCommandParser::Help() const noexcept {
 	std::string result = options_.help();
-	result += "Examples:\n"
+	result += "\n"
+		"Examples:\n"
 		"  './rxdaq import params.json' to read parameters from params.json\n"
 		"Remember that --config can be used to choose path of json config file.\n";
 
@@ -751,7 +857,8 @@ ExportCommandParser::ExportCommandParser() noexcept
 
 std::string ExportCommandParser::Help() const noexcept {
 	std::string result = options_.help();
-	result += "Examples:\n"
+	result += "\n"
+		"Examples:\n"
 		"  `./rxdaq export param.json' to export parameters to params.json\n"
 		"Remember that --config can be used to choose path of json config file.\n";
 
@@ -831,14 +938,16 @@ RunCommandParser::RunCommandParser() noexcept
 			"run_pos",
 			"Set the run number.",
 			cxxopts::value<int>()->default_value("-1")
-		);
+		)
+		;
 	options_.parse_positional({"module_pos", "time_pos", "run_pos"});
 	options_.positional_help("[module] [time] [run]");
 }
 
 std::string RunCommandParser::Help() const noexcept {
 	std::string result = options_.help();
-	result += "Examples:\n"
+	result += "\n"
+		"Examples:\n"
 		"  'run' to run all modules in list mode.\n"
 		"  'run 0' to run module 0 in list mode.\n"
 		"  'run 13 10' to run all modules in list mode for 10 seconds.\n"
@@ -863,6 +972,7 @@ void RunCommandParser::Parse(int argc, char **argv) {
 	module_ = parse_result["module"].count() ? 
 		parse_result["module"].as<int>() :
 		parse_result["module_pos"].as<int>();
+	CheckModuleNumber(module_);
 
 	seconds_ = parse_result["time"].count() ?
 		parse_result["time"].as<int>() :
@@ -878,6 +988,23 @@ void RunCommandParser::Run(std::shared_ptr<Crate> crate) {
 	crate->StartRun(module_, seconds_, run_);
 }
 
+
+void CheckModuleNumber(int module) {
+	if (module > kModuleNum) {
+		throw UserError("module should smaller than or equal to 13");
+	} else if (module < 0) {
+		throw UserError("module should be positive");
+	}
+}
+
+
+void CheckChannelNumber(int channel) {
+	if (channel > kChannelNum) {
+		throw UserError("channel should smaller than or equal to 16");
+	} else if (channel < 0) {
+		throw UserError("channel should be positive");
+	}
+}
 
 
 

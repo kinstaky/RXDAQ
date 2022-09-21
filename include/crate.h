@@ -84,7 +84,27 @@ public:
 	/// @param[in] fast true for fast boot (don't boot fpga or load parameters)
 	///
 	virtual void Boot(unsigned short module_id, bool fast = true);
+
+
+	//-------------------------------------------------------------------------
+	//	 					method for auto task
+	//-------------------------------------------------------------------------
 	
+
+	/// @brief process auto task
+	///
+	/// @param[in] task_name name of task to process
+	/// @param[in] module module to process
+	///
+	virtual void Task(const std::string &task_name, unsigned short module);
+
+
+	/// @brief get the available tasks
+	///
+	/// @returns available tasks list in string
+	///
+	virtual std::string ListTasks() const;
+
 
 	//-------------------------------------------------------------------------
 	//	 				method to read and write parameters
@@ -295,6 +315,33 @@ std::vector<unsigned short> CreateRequestIndexes(
 	unsigned short reality_limit,
 	unsigned short index
 );
+
+
+/// @brief check whether module is larger than 13 or smaller than 0
+///
+/// @param[in] module index of module
+///
+/// @throws UserError if module number is not in [0, 13]
+/// 
+void CheckModuleNumber(int module);
+
+
+/// @brief check whether channel is larger than 16 or smaller than 0
+///
+/// @param[in] channel index of channel
+//
+/// @throws UserError if module number is not in [0, 16]
+/// 
+void CheckChannelNumber(int channel);
+
+
+/// @brief check whether task name is available
+///
+/// @param[in] task_name task name to check
+///
+/// @throw UserError if task name is not available
+///
+void CheckTaskName(const std::string &task_name);
 
 
 }	// namespace rxdaq

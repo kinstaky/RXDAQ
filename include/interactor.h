@@ -21,6 +21,7 @@ public:
 		kHelpCommandParser,
 		kRpcCommandParser,
 		kBootCommandParser,
+		kTaskCommandParser,
 		kInfoCommandParser,
 		kReadCommandParser,
 		kWriteCommandParser,
@@ -268,6 +269,57 @@ public:
 
 private:
 	std::string config_path_;
+	int module_;
+};
+
+
+/// This class parse the options of subcommand task and process tasks
+class TaskCommandParser : public Interactor {
+public:
+
+	/// @brief constructor
+	///
+	TaskCommandParser() noexcept;
+
+
+	/// @brief default destructor
+	///
+	virtual ~TaskCommandParser() = default;
+
+
+	/// @brief get command name
+	///
+	/// @returns command name 'task'
+	///
+	inline virtual std::string CommandName() const noexcept override {
+		return "task";
+	}
+
+
+	/// @brief get help information
+	///
+	/// @returns help information
+	///
+	virtual std::string Help() const noexcept override;
+
+
+	/// @brief parse the arguments and get read information
+	///
+	/// @param[in] argc number of arguments
+	/// @param[in] argv arguments list
+	///
+	virtual void Parse(int argc, char **argv) override;
+
+
+	/// @brief run the interactor and read parameters
+	///
+	/// @param[in] crate pointer to crate object
+	///
+	virtual void Run(std::shared_ptr<Crate> crate) override;
+
+private:
+	std::string config_path_;
+	std::string task_name_;
 	int module_;
 };
 

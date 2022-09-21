@@ -220,6 +220,57 @@ void Crate::Boot(unsigned short module_id, bool fast) {
 }
 
 
+//-------------------------------------------------------------------------
+//	 					method for auto task
+//-------------------------------------------------------------------------
+
+const std::string available_tasks[] = {
+	"offset",
+	"blcut"
+};
+
+
+void CheckTaskName(const std::string &task_name) {
+	for (const std::string &task : available_tasks) {
+		if (task == task_name) return;
+	}
+	throw UserError("Invalid task name " + task_name);
+}
+
+
+void Crate::Task(const std::string &task_name, unsigned short module_id) {
+	std::vector<unsigned short> modules =
+		CreateRequestIndexes(kModuleNum, ModuleNum(), module_id);
+
+	CheckTaskName(task_name);
+
+	xia_crate_.ready();
+	for (unsigned short m : modules) {
+		xia::pixie::crate::module_handle module(xia_crate_, m);
+		if (task_name == "offset") {
+			module->adjust_offsets();
+		} else if (task_name == "blcut") {
+			xia::pixie::channel::range channels;
+			for (unsigned short i = 0; i < kChannelNum; ++i) {
+				channels.push_back(i);
+			}
+			xia::pixie::param::values values;
+			module->bl_find_cut(channels, values);
+		} else {
+			throw RXError("Should not be here in Crate::Task()");
+		}
+	}
+}
+
+
+std::string Crate::ListTasks() const {
+	std::string result = "";
+	for (const std::string &task : available_tasks) {
+		result += task + "\n";
+	}
+	return result;
+}
+
 
 //-----------------------------------------------------------------------------
 //	 				method to read and write parameters

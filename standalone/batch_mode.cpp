@@ -2,8 +2,6 @@
 #include <string>
 #include <iostream>
 
-#include "pixie16/pixie16.h" 
-
 #include "include/config.h"
 #include "include/frame.h"
 
