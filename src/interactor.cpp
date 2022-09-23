@@ -534,8 +534,10 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 	verbose_ = parse_result["verbose"].count() ? true : false;
 }
 
-template <typename Value>
+template <typename Value, typename VerboseValue>
 std::vector<Value> GenerateVerboseValues(
+	std::string parameter,
+	std::vector<Value> values,
 	std::vector<unsigned short> modules,
 	std::vector<unsigned short> channels = std::vector<unsigned short>(1)
 ) {
@@ -543,9 +545,13 @@ std::vector<Value> GenerateVerboseValues(
 	for (size_t i = 0; i < modules.size(); ++i) {
 		for (size_t j = 0; j < channels.size(); ++j) {
 			for (const auto &value :
-				vparam::VerboseValues(name_, values[i])) {
+				vparam::VerboseValues(
+					parameter,
+					values[i * channels.size() + j]
+				)
+			) {
 				
-				result.push_back(static_cast<Value>(value));
+				result.push_back(static_cast<VerboseValue>(value));
 			}
 		}
 	}
@@ -581,13 +587,21 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 			
 			if (name_ == "MODULE_CSRB") {
 				std::cout << View(
-					GenerateVerboseValues<bool>(modules),
+					GenerateVerboseValues<unsigned int, bool>(
+						name_,
+						values,
+						modules
+					),
 					names,
 					modules
 				);
 			} else {
 				std::cout << View(
-					GenerateVerboseValues<unsigned int>(modules),
+					GenerateVerboseValues<unsigned int, unsigned int>(
+						name_,
+						values,
+						modules
+					),
 					names,
 					modules
 				);
@@ -645,14 +659,24 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 
 			if (name_ == "CHANNEL_CSRA") {
 				std::cout << View(
-					GenerateVerboseValues<bool>(modules, channels),
+					GenerateVerboseValues<double, bool>(
+						name_,
+						values,
+						modules,
+						channels
+					),
 					names,
 					modules,
 					channels
 				);
 			} else {
 				std::cout << View(
-					GenerateVerboseValues<unsigned int>(modules, channels),
+					GenerateVerboseValues<double, double>(
+						name_,
+						values,
+						modules,
+						channels
+					),
 					names,
 					modules,
 					channels

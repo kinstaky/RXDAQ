@@ -143,6 +143,24 @@ target_link_libraries(
 	PUBLIC crate control_crate_grpc_proto
 )
 
+# view library
+add_library(
+	view
+	view.cpp ${PROJECT_INCLUDE_DIR}/view.h
+)
+target_include_directories(
+	view
+	PUBLIC ${PROJECT_INCLUDE_DIR}
+)
+target_compile_options(
+	view
+	PRIVATE -Werror -Wall -Wextra
+)
+target_link_libraries(
+	view
+	PUBLIC error
+)
+
 # interactor library
 add_library(
 	interactor
@@ -158,7 +176,7 @@ target_compile_options(
 )
 target_link_libraries(
 	interactor
-	PUBLIC crate error control_crate_service cxxopts::cxxopts 
+	PUBLIC crate error view control_crate_service cxxopts::cxxopts 
 )
 
 # parser library

@@ -45,6 +45,18 @@ cc_library(
 )
 
 cc_library(
+	name = "view",
+	srcs = ["src/view.cpp"],
+	hdrs = ["include/view.h"],
+	includes = ["include"],
+	copts = ["-std=c++17"],
+	deps = [
+		"error"
+	],
+	visibility = ["//visibility:public"]
+)
+
+cc_library(
 	name = "interactor",
 	srcs = ["src/interactor.cpp"],
 	hdrs = ["include/interactor.h"],
@@ -53,6 +65,7 @@ cc_library(
 	deps = [
 		"crate",
 		"error",
+		"view",
 		"control_crate_service",
 		"@cxxopts//:cxxopts"
 	],
