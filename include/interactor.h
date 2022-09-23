@@ -394,6 +394,7 @@ private:
 	std::string name_;
 	int module_;
 	int channel_;
+	bool verbose_;
 };
 
 

@@ -458,6 +458,11 @@ ReadCommandParser::ReadCommandParser() noexcept
 			"<id>"
 		)
 		(
+			"v,verbose",
+			"Read some parameter verbosely.",
+			cxxopts::value<bool>()
+		)
+		(
 			"config",
 			"Set config file path.",
 			cxxopts::value<std::string>()->default_value("config.json"),
@@ -524,6 +529,8 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 		parse_result["channel"].as<int>() :
 		parse_result["channel_pos"].as<int>();
 	CheckChannelNumber(channel_);
+
+	verbose_ = parse_result["verbose"].count() ? true : false;
 }
 
 
@@ -533,15 +540,12 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 	// crate->Boot(module_, true);
 
 	if (name_.empty()) {
-		std::cout << crate->ListParameters();
+		std::cout << crate->ListParameters(ParameterType::kAll, verbose_);
 		return;
 	}
 
 	auto type = crate->CheckParameter(name_);
-	if (type == ParameterType::kInvalid) {
-		throw UserError("Invalid paraemter" + name_ + ".\n");
-	} else if (type == ParameterType::kModule) {
-		std::cout << "module parameter \n";
+	if (type == ParameterType::kModule) {
 
 		// prepare for modules to read
 		auto modules = CreateRequestIndexes(kModuleNum, crate->ModuleNum(), module_);
@@ -552,13 +556,32 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 			values.push_back(crate->ReadParameter(name_, m));
 		}
 
+
 		// output parameters
-		std::cout << "module   " << name_ << "\n";		// title
-		for (const auto &m : modules) {
-			std::cout << std::setw(6) << m;
-			std::cout << std::setw(name_.size()+3) << values[m];
+		if (verbose_ && vparam::Valid(name_)) {
+			std::cout << "module";
+			for (const auto &name : vparam::VerboseNames(name_)) {
+				std::cout << std::setw(8) << name;
+			}
 			std::cout << "\n";
+			for (size_t i = 0; i < modules.size(); ++i) {
+				std::cout << std::setw(6) << modules[i] << std::hex;
+				for (const auto &value : 
+					vparam::VerboseValues(name_, values[i])) {
+					
+					std::cout << std::setw(8) << value;
+				}
+				std::cout << "\n" << std::dec;
+			}
+
+		} else {
+			std::cout << "module   " << name_ << "\n";		// title
+			for (size_t i = 0; i < modules.size(); ++i) {
+				std::cout << std::setw(6) << modules[i]
+					<< std::setw(name_.size()+3) << values[i] << "\n";
+			}
 		}
+
 
 	} else if (type == ParameterType::kChannel) {
 
@@ -575,19 +598,44 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 		}
 
 		// output parameters
-		std::cout << "module";
-		for (const auto &c : channels) {
-			std::cout << std::setw(8) << "ch" + std::to_string(c);
-		}
-		std::cout << "\n";
-		auto value_iter = values.begin();
-		for (const auto &m : modules) {
-			std::cout << std::setw(6) << m;
-			for (size_t c = 0; c < channels.size(); ++c, ++value_iter) {
-				std::cout << "  " << std::setfill(' ') << std::setw(6) << *value_iter;
+		if (verbose_ && vparam::Valid(name_)) {
+			std::cout << "module    ch";
+			for (const auto &name : vparam::VerboseNames(name_)) {
+				std::cout << std::setw(8) << name;
 			}
 			std::cout << "\n";
+			auto value_iter = values.begin();
+			for (size_t i = 0; i < modules.size(); ++i) {
+				for (size_t j = 0; j < channels.size(); ++j, ++value_iter) {
+					std::cout << std::setw(6) << i << std::setw(6) << j
+						<< std::hex;
+					for (const auto &value : 
+						vparam::VerboseValues(name_, *value_iter)) {
+						
+						std::cout << std::setw(8) << value;
+					}
+					std::cout << "\n" << std::dec;
+				}
+			}
+
+		} else {
+			std::cout << "module";
+			for (const auto &c : channels) {
+				std::cout << std::setw(8) << "ch" + std::to_string(c);
+			}
+			std::cout << "\n";
+			auto value_iter = values.begin();
+			for (const auto &m : modules) {
+				std::cout << std::setw(6) << m;
+				for (size_t c = 0; c < channels.size(); ++c, ++value_iter) {
+					std::cout << "  " << std::setfill(' ') << std::setw(6) << *value_iter;
+				}
+				std::cout << "\n";
+			}
 		}
+	
+	} else {
+		throw UserError("Invalid paraemter" + name_ + ".\n");
 	}
 }
 

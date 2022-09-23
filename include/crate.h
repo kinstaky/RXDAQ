@@ -34,6 +34,124 @@ const std::map<ParameterType, std::string> kParameterTypeNames = {
 };
 
 
+// verbose parameters
+namespace vparam {
+	struct VerboseParameterInformation {
+		std::string name;
+		unsigned int bit;
+		unsigned int length;
+		std::vector<std::string> alias;
+	};
+
+
+	const std::map<std::string, std::vector<VerboseParameterInformation>>
+		verbose_parameters =
+	{
+		{
+			"MODULE_CSRB",
+			{
+				{"PULLUP", 0, 1, {"CPLDPULLUP"}},
+				{"DIRMOD", 4, 1, {"DIRMOD"}},
+				{"CMASTER", 6, 1, {"CHASSISMASTER"}},
+				{"GFTSEL", 7, 1, {"GFTSEL"}},
+				{"ETSEL", 8, 1, {"ETSEL"}},
+				{"INHIBIT", 10, 1, {"INHIBITENA"}},
+				{"MCRATE", 11, 1, {"MULTICRATES"}},
+				{"SORT", 12, 1, {"SORTEVENTS"}},
+				{"BFAST", 13, 1, {"BKPLFASTTRIG"}}
+			}
+		},
+		{
+			"CHANNEL_CSRA",
+			{
+				{"FTS", 0, 1, {"FRTIGSEL"}},
+				{"MSE", 1, 1, {"EXTTRIGSEL"}},
+				{"GC", 2, 1, {"GOOD"}},
+				{"CSE", 3, 1, {"CHANTRIGSEL"}},
+				{"BDA", 4, 1, {"SYNCDATAACQ"}},
+				{"SP", 5, 1, {"POLARITY"}},
+				{"CTV", 6, 1, {"VETOENA"}},
+				{"HE", 7, 1, {"HISTOE", "HIST"}},
+				{"TC", 8, 1, {"TRACEENA"}},
+				{"QDC", 9 ,1, {"QDECENA", "EQS"}},
+				{"CFD", 10, 1, {"CFDMODE", "ECT"}},
+				{"MVT", 11, 1, {"GLOBTRIG"}},
+				{"ERB", 12, 1, {"ESUMSENA"}},
+				{"CVT", 13, 1, {"CHANTRIG"}},
+				{"IR", 14, 1, {"ENARELAY"}},
+				{"NPR", 15, 1, {"PILEUPCTRL"}},
+				{"IPR", 16, 1, {"INVERSEPILEUP"}},
+				{"NTL", 17, 1, {"ENAENERGYCUT"}},
+				{"GTS", 18, 1, {"GROUPTRIGSEL"}},
+				{"CVS", 19, 1, {"CHANVETOSEL"}},
+				{"MVS", 20, 1, {"MODVETOSEL"}},
+				{"ETS", 21, 1, {"EXTTSENA"}}
+			}
+		}
+	};
+
+
+	/// @brief check type of parameter
+	///
+	/// @param[in] name name of the parameter type 
+	/// @returns parameter type
+	/// 
+	ParameterType CheckParameter(const std::string &name);
+
+
+	/// @brief check whether the variable is valid
+	///
+	/// @param[in] name name of the parameter
+	/// @returns true if valid, false otherwise
+	///
+	inline bool Valid(const std::string &name) {
+		return CheckParameter(name) != ParameterType::kInvalid;
+	}
+
+
+	/// @brief get list of verbose parameter name from the origin parameter
+	///
+	/// @param[in] name name of the parameter 
+	/// @returns list of verbose names
+	///
+	std::vector<std::string> VerboseNames(const std::string &name);
+
+
+	/// @brief get list of value of verbose parameter
+	///
+	/// @param[in] name name of the parameter 
+	/// @param[in] value value of the parameter
+	/// @returns list of verbose values
+	/// 
+	std::vector<unsigned int> VerboseValues(
+		const std::string &name,
+		unsigned int value
+	);
+
+
+	/// @brief get list of value of verbose parameter
+	///
+	/// @param[in] name name of the parameter 
+	/// @param[in] value value of the parameter
+	/// @returns list of verbose values
+	/// 
+	std::vector<unsigned int> VerboseValues(
+		const std::string &name,
+		double value
+	);
+
+
+	/// @brief list the available verbose parameters in string
+	///
+	/// @param[in] type type of the parameters
+	/// @returns parameters in string
+	/// 
+	std::string ListParameters(ParameterType type = ParameterType::kAll);
+};
+
+
+
+
 /// This class represents a physical XIA crate, and provides some interface to
 /// control it. So the interactors can call this methods include boot, read and
 /// write parameters, get firmware information, import or export the parameters
@@ -115,7 +233,8 @@ public:
 	/// @returns list of parameters in string format
 	///
 	virtual std::string ListParameters(
-		ParameterType type = ParameterType::kAll
+		ParameterType type = ParameterType::kAll,
+		bool verbose = false
 	) noexcept;
 
 
@@ -124,7 +243,7 @@ public:
 	/// @param[in] name parameter name
 	/// @returns parameter type enum class
 	///
-	virtual ParameterType CheckParameter(const std::string &name) noexcept;
+	static ParameterType CheckParameter(const std::string &name) noexcept;
 	
 
 	/// @brief read module parameter
@@ -342,7 +461,6 @@ void CheckChannelNumber(int channel);
 /// @throw UserError if task name is not available
 ///
 void CheckTaskName(const std::string &task_name);
-
 
 }	// namespace rxdaq
 

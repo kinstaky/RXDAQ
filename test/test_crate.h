@@ -80,15 +80,6 @@ public:
 	//	 				method to read and write parameters
 	//-------------------------------------------------------------------------
 
-	/// @brief list parameters
-	///
-	/// @returns list of parameters in string format
-	///
-	virtual std::string ListParameters(
-		ParameterType type = ParameterType::kAll
-	) noexcept override;
-
-
 	/// @brief read module parameter
 	///
 	/// @param[in] name name of the parameter
