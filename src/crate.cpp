@@ -16,6 +16,99 @@ typedef Message::Level MsgLevel;
 typedef xia::pixie::error::error XiaError;
 
 
+namespace vparam {
+
+ParameterType CheckParameter(const std::string &name) {
+	for (const auto &[parameter, info_list] : verbose_parameters) {
+		for (const auto &info : info_list) {
+			if (info.name == name) {
+				return Crate::CheckParameter(parameter);
+			}
+			for (const auto &alias : info.alias) {
+				if (alias == name) {
+					return Crate::CheckParameter(parameter);
+				}
+			}
+		}
+	}
+	return ParameterType::kInvalid;
+}
+
+
+std::vector<std::string> VerboseNames(const std::string &name) {
+	std::vector<std::string> result;
+	for (const auto &info : verbose_parameters.at(name)) {
+		result.push_back(info.name);
+	}
+	return result;
+}
+
+
+std::vector<unsigned int> VerboseValues(const std::string &name, unsigned int value) {
+	std::vector<unsigned int> result;
+	for (const auto &info : verbose_parameters.at(name)) {
+		result.push_back((value >> info.bit) & ((0x1 << info.length)-1));
+	}
+	return result;
+}
+
+
+std::vector<unsigned int> VerboseValues(const std::string &name, double value) {
+	std::vector<unsigned int> result;
+	for (const auto &info : verbose_parameters.at(name)) {
+		unsigned int cast_value =
+			static_cast<unsigned int>(value);
+		result.push_back((cast_value >> info.bit) & ((0x1 << info.length)-1));
+	}
+	return result;
+}
+
+
+std::string ListParameters(ParameterType type) {
+	std::string result = "";
+
+	// module parameters
+	if (type == ParameterType::kAll || type == ParameterType::kModule) {
+		result += "Verbose module parameters\n";
+		for (const auto &[parameter, info_list] : verbose_parameters) {
+			if (Crate::CheckParameter(parameter) != ParameterType::kModule) {
+				continue;
+			}
+			result += "  " + parameter + "\n";
+			for (const auto &info : info_list) {
+				result += "    " + info.name + " (";
+				for (const auto &alias : info.alias) {
+					result += alias + ", ";
+				}
+				result += "\b\b)\n";
+			}
+		}
+	}
+
+	// channel parameters
+	if (type == ParameterType::kAll || type == ParameterType::kChannel) {
+		result += "\nVerbose channel parameters\n";
+		for (const auto &[parameter, info_list] : verbose_parameters) {
+			if (Crate::CheckParameter(parameter) != ParameterType::kChannel) {
+				continue;
+			}
+			result += "  " + parameter + "\n";
+			for (const auto &info : info_list) {
+				result += "    " + info.name + "(";
+				for (const auto &alias : info.alias) {
+					result += alias + ", ";
+				}
+				result += "\b\b)\n";
+			}
+		}	}
+
+	return result;
+}
+
+
+};
+
+
 /*
  * Module FIFO realtime default settings.
  */
@@ -276,12 +369,18 @@ std::string Crate::ListTasks() const {
 //	 				method to read and write parameters
 //-----------------------------------------------------------------------------
 
-std::string Crate::ListParameters(ParameterType type) noexcept {
+std::string Crate::ListParameters(ParameterType type, bool verbose) noexcept {
 	std::cout << message_(MsgLevel::kDebug)
-		<< "Crate::ListParameters(" << kParameterTypeNames.at(type) << ")\n";
+		<< "Crate::ListParameters(" << kParameterTypeNames.at(type)
+		<< ", " << verbose
+		<< ")\n";
+
+	if (verbose) {
+		return vparam::ListParameters(type);
+	}
 
 	std::string result = "";
-	
+
 	// module parameters
 	if (type == ParameterType::kAll || type == ParameterType::kModule) {
 		result += "Module parameters\n";
@@ -305,16 +404,14 @@ std::string Crate::ListParameters(ParameterType type) noexcept {
 
 
 ParameterType Crate::CheckParameter(const std::string &name) noexcept {
-	std::cout << message_(MsgLevel::kDebug)
-		<< "Crate::CheckParameterName(" << name << ")\n";
-
 	if (xia::pixie::param::is_module_param(name)) {
 		return ParameterType::kModule;
 	}
 	if (xia::pixie::param::is_channel_param(name)) {
 		return ParameterType::kChannel;
 	}
-	return ParameterType::kInvalid;
+	return vparam::CheckParameter(name);
+
 	// if (XiaParam::is_system_param(name)) return TypeSystemParameter;
 	// if (XiaParam::is_module_var(name)) return TypeModuleVariable;
 	// if (XiaParam::is_channel_var(name)) return TypeChannelVariable;

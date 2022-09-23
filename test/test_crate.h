@@ -85,7 +85,8 @@ public:
 	/// @returns list of parameters in string format
 	///
 	virtual std::string ListParameters(
-		ParameterType type = ParameterType::kAll
+		ParameterType type = ParameterType::kAll,
+		bool verbose = false
 	) noexcept override;
 
 

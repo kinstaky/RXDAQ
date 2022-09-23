@@ -10,16 +10,20 @@
         },
         {
             "slot": 3,
-            "template": "100M"
+            "template": "500M"
         },
         {
             "slot": 4,
-            "template": "250M"
+            "template": "100M"
         },
         {
             "slot": 5,
             "template": "100M"
-        }
+        },
+		{
+			"slot": 6,
+			"template": "100M"
+		}
     ],
     "run": {
         "dataFile": "data",
