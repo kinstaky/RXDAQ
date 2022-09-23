@@ -18,15 +18,27 @@ typedef xia::pixie::error::error XiaError;
 
 namespace vparam {
 
+
+ParameterType CheckExtractParameter(const std::string &name) {
+	if (name == "TrigConfig") {
+		return ParameterType::kModule;
+	} else if (name == "MultiplicityMask") {
+		return ParameterType::kChannel;
+	} else {
+		return Crate::CheckParameter(name);
+	}
+}
+
+
 ParameterType CheckParameter(const std::string &name) {
 	for (const auto &[parameter, info_list] : verbose_parameters) {
 		for (const auto &info : info_list) {
 			if (info.name == name) {
-				return Crate::CheckParameter(parameter);
+				return CheckExtractParameter(parameter);
 			}
 			for (const auto &alias : info.alias) {
 				if (alias == name) {
-					return Crate::CheckParameter(parameter);
+					return CheckExtractParameter(parameter);
 				}
 			}
 		}
