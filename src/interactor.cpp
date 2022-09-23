@@ -8,6 +8,7 @@
 #include "pixie/error.hpp"
 
 #include "include/error.h"
+#include "include/view.h"
 #include "include/control_crate_service.h"
 
 typedef xia::pixie::error::error XiaError;
@@ -533,6 +534,23 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 	verbose_ = parse_result["verbose"].count() ? true : false;
 }
 
+template <typename Value>
+std::vector<Value> GenerateVerboseValues(
+	std::vector<unsigned short> modules,
+	std::vector<unsigned short> channels = std::vector<unsigned short>(1)
+) {
+	std::vector<Value> result;
+	for (size_t i = 0; i < modules.size(); ++i) {
+		for (size_t j = 0; j < channels.size(); ++j) {
+			for (const auto &value :
+				vparam::VerboseValues(name_, values[i])) {
+				
+				result.push_back(static_cast<Value>(value));
+			}
+		}
+	}
+	return result;
+};
 
 
 void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
@@ -558,29 +576,53 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 
 
 		// output parameters
-		if (verbose_ && vparam::Valid(name_)) {
-			std::cout << "module";
-			for (const auto &name : vparam::VerboseNames(name_)) {
-				std::cout << std::setw(8) << name;
+		if (verbose_ && vparam::Expand(name_)) {
+			std::vector<std::string> names = vparam::VerboseNames(name_);
+			
+			if (name_ == "MODULE_CSRB") {
+				std::cout << View(
+					GenerateVerboseValues<bool>(modules),
+					names,
+					modules
+				);
+			} else {
+				std::cout << View(
+					GenerateVerboseValues<unsigned int>(modules),
+					names,
+					modules
+				);
 			}
-			std::cout << "\n";
-			for (size_t i = 0; i < modules.size(); ++i) {
-				std::cout << std::setw(6) << modules[i] << std::hex;
-				for (const auto &value : 
-					vparam::VerboseValues(name_, values[i])) {
-					
-					std::cout << std::setw(8) << value;
-				}
-				std::cout << "\n" << std::dec;
-			}
-
 		} else {
-			std::cout << "module   " << name_ << "\n";		// title
-			for (size_t i = 0; i < modules.size(); ++i) {
-				std::cout << std::setw(6) << modules[i]
-					<< std::setw(name_.size()+3) << values[i] << "\n";
-			}
+			std::cout << View(values, {name_}, modules);
 		}
+
+		// if (verbose_ && vparam::Expand(name_)) {
+		// 	std::cout << "module";
+		// 	for (const auto &name : vparam::VerboseNames(name_)) {
+		// 		std::cout << std::setw(8) << name;
+		// 	}
+		// 	std::cout << "\n";
+		// 	for (size_t i = 0; i < modules.size(); ++i) {
+		// 		std::cout << std::setw(6) << modules[i] << std::hex;
+		// 		for (const auto &value : 
+		// 			vparam::VerboseValues(name_, values[i])) {
+					
+		// 			if (value) {
+		// 				std::cout << std::setw(8) << value;
+		// 			} else {
+		// 				std::cout << std::string(8, ' ');
+		// 			}
+		// 		}
+		// 		std::cout << "\n" << std::dec;
+		// 	}
+
+		// } else {
+		// 	std::cout << "module   " << name_ << "\n";		// title
+		// 	for (size_t i = 0; i < modules.size(); ++i) {
+		// 		std::cout << std::setw(6) << modules[i]
+		// 			<< std::setw(name_.size()+3) << values[i] << "\n";
+		// 	}
+		// }
 
 
 	} else if (type == ParameterType::kChannel) {
@@ -598,41 +640,68 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 		}
 
 		// output parameters
-		if (verbose_ && vparam::Valid(name_)) {
-			std::cout << "module    ch";
-			for (const auto &name : vparam::VerboseNames(name_)) {
-				std::cout << std::setw(8) << name;
-			}
-			std::cout << "\n";
-			auto value_iter = values.begin();
-			for (size_t i = 0; i < modules.size(); ++i) {
-				for (size_t j = 0; j < channels.size(); ++j, ++value_iter) {
-					std::cout << std::setw(6) << i << std::setw(6) << j
-						<< std::hex;
-					for (const auto &value : 
-						vparam::VerboseValues(name_, *value_iter)) {
-						
-						std::cout << std::setw(8) << value;
-					}
-					std::cout << "\n" << std::dec;
-				}
+		if (verbose_ && vparam::Expand(name_)) {
+			std::vector<std::string> names = vparam::VerboseNames(name_);
+
+			if (name_ == "CHANNEL_CSRA") {
+				std::cout << View(
+					GenerateVerboseValues<bool>(modules, channels),
+					names,
+					modules,
+					channels
+				);
+			} else {
+				std::cout << View(
+					GenerateVerboseValues<unsigned int>(modules, channels),
+					names,
+					modules,
+					channels
+				);
 			}
 
 		} else {
-			std::cout << "module";
-			for (const auto &c : channels) {
-				std::cout << std::setw(8) << "ch" + std::to_string(c);
-			}
-			std::cout << "\n";
-			auto value_iter = values.begin();
-			for (const auto &m : modules) {
-				std::cout << std::setw(6) << m;
-				for (size_t c = 0; c < channels.size(); ++c, ++value_iter) {
-					std::cout << "  " << std::setfill(' ') << std::setw(6) << *value_iter;
-				}
-				std::cout << "\n";
-			}
+			std::cout << View(values, {name_}, modules, channels);
 		}
+
+		// if (verbose_ && vparam::Expand(name_)) {
+		// 	std::cout << "module    ch";
+		// 	for (const auto &name : vparam::VerboseNames(name_)) {
+		// 		std::cout << std::setw(8) << name;
+		// 	}
+		// 	std::cout << "\n";
+		// 	auto value_iter = values.begin();
+		// 	for (size_t i = 0; i < modules.size(); ++i) {
+		// 		for (size_t j = 0; j < channels.size(); ++j, ++value_iter) {
+		// 			std::cout << std::setw(6) << i << std::setw(6) << j
+		// 				<< std::hex;
+		// 			for (const auto &value : 
+		// 				vparam::VerboseValues(name_, *value_iter)) {
+						
+		// 				if (value) {
+		// 					std::cout << std::setw(8) << value;
+		// 				} else {
+		// 					std::cout << std::string(8, ' ');
+		// 				}
+		// 			}
+		// 			std::cout << "\n" << std::dec;
+		// 		}
+		// 	}
+
+		// } else {
+		// 	std::cout << "module";
+		// 	for (const auto &c : channels) {
+		// 		std::cout << std::setw(8) << "ch" + std::to_string(c);
+		// 	}
+		// 	std::cout << "\n";
+		// 	auto value_iter = values.begin();
+		// 	for (const auto &m : modules) {
+		// 		std::cout << std::setw(6) << m;
+		// 		for (size_t c = 0; c < channels.size(); ++c, ++value_iter) {
+		// 			std::cout << "  " << std::setfill(' ') << std::setw(6) << *value_iter;
+		// 		}
+		// 		std::cout << "\n";
+		// 	}
+		// }
 	
 	} else {
 		throw UserError("Invalid paraemter" + name_ + ".\n");

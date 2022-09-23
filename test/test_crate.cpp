@@ -36,7 +36,7 @@ void TestCrate::Boot(unsigned short module, bool fast) noexcept {
 }
 
 
-std::string TestCrate::ListParameters(ParameterType) noexcept {
+std::string TestCrate::ListParameters(ParameterType, bool) noexcept {
 	list_ = true;
 	return "";
 }

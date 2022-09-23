@@ -99,13 +99,13 @@ namespace vparam {
 	ParameterType CheckParameter(const std::string &name);
 
 
-	/// @brief check whether the variable is valid
+	/// @brief check whether the variable can expand to verbose parameters
 	///
 	/// @param[in] name name of the parameter
-	/// @returns true if valid, false otherwise
+	/// @returns true if can expand, false otherwise
 	///
-	inline bool Valid(const std::string &name) {
-		return CheckParameter(name) != ParameterType::kInvalid;
+	inline bool Expand(const std::string &name) {
+		return verbose_parameters.find(name) != verbose_parameters.end();
 	}
 
 

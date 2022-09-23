@@ -18,15 +18,27 @@ typedef xia::pixie::error::error XiaError;
 
 namespace vparam {
 
+
+ParameterType CheckExtractParameter(const std::string &name) {
+	if (name == "TrigConfig") {
+		return ParameterType::kModule;
+	} else if (name == "MultiplicityMask") {
+		return ParameterType::kChannel;
+	} else {
+		return Crate::CheckParameter(name);
+	}
+}
+
+
 ParameterType CheckParameter(const std::string &name) {
 	for (const auto &[parameter, info_list] : verbose_parameters) {
 		for (const auto &info : info_list) {
 			if (info.name == name) {
-				return Crate::CheckParameter(parameter);
+				return CheckExtractParameter(parameter);
 			}
 			for (const auto &alias : info.alias) {
 				if (alias == name) {
-					return Crate::CheckParameter(parameter);
+					return CheckExtractParameter(parameter);
 				}
 			}
 		}
@@ -57,7 +69,7 @@ std::vector<unsigned int> VerboseValues(const std::string &name, double value) {
 	std::vector<unsigned int> result;
 	for (const auto &info : verbose_parameters.at(name)) {
 		unsigned int cast_value =
-			static_cast<unsigned int>(xia::util::ieee_float(value));
+			static_cast<unsigned int>(value);
 		result.push_back((cast_value >> info.bit) & ((0x1 << info.length)-1));
 	}
 	return result;
@@ -76,7 +88,7 @@ std::string ListParameters(ParameterType type) {
 			}
 			result += "  " + parameter + "\n";
 			for (const auto &info : info_list) {
-				result += "    " + info.name + "(";
+				result += "    " + info.name + " (";
 				for (const auto &alias : info.alias) {
 					result += alias + ", ";
 				}
