@@ -23,7 +23,7 @@ View<Value>::View(
 	if (channels.empty()) {
 		type_ = ViewType::kModuleParameter;
 	} else {
-		type_ = parameters.size() > 1 ? ViewType::kServeralChannelParameter
+		type_ = parameters.size() > 1 ? ViewType::kSeveralChannelParameter
 			: ViewType::kOneChannelParameter;
 	}
 }

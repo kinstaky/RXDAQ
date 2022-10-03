@@ -535,13 +535,13 @@ void ReadCommandParser::Parse(int argc, char **argv) {
 }
 
 template <typename Value, typename VerboseValue>
-std::vector<Value> GenerateVerboseValues(
+std::vector<VerboseValue> GenerateVerboseValues(
 	std::string parameter,
 	std::vector<Value> values,
 	std::vector<unsigned short> modules,
 	std::vector<unsigned short> channels = std::vector<unsigned short>(1)
 ) {
-	std::vector<Value> result;
+	std::vector<VerboseValue> result;
 	for (size_t i = 0; i < modules.size(); ++i) {
 		for (size_t j = 0; j < channels.size(); ++j) {
 			for (const auto &value :
@@ -610,35 +610,6 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 			std::cout << View(values, {name_}, modules);
 		}
 
-		// if (verbose_ && vparam::Expand(name_)) {
-		// 	std::cout << "module";
-		// 	for (const auto &name : vparam::VerboseNames(name_)) {
-		// 		std::cout << std::setw(8) << name;
-		// 	}
-		// 	std::cout << "\n";
-		// 	for (size_t i = 0; i < modules.size(); ++i) {
-		// 		std::cout << std::setw(6) << modules[i] << std::hex;
-		// 		for (const auto &value : 
-		// 			vparam::VerboseValues(name_, values[i])) {
-					
-		// 			if (value) {
-		// 				std::cout << std::setw(8) << value;
-		// 			} else {
-		// 				std::cout << std::string(8, ' ');
-		// 			}
-		// 		}
-		// 		std::cout << "\n" << std::dec;
-		// 	}
-
-		// } else {
-		// 	std::cout << "module   " << name_ << "\n";		// title
-		// 	for (size_t i = 0; i < modules.size(); ++i) {
-		// 		std::cout << std::setw(6) << modules[i]
-		// 			<< std::setw(name_.size()+3) << values[i] << "\n";
-		// 	}
-		// }
-
-
 	} else if (type == ParameterType::kChannel) {
 
 		// prepare for modules and channels to read
@@ -686,46 +657,6 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 		} else {
 			std::cout << View(values, {name_}, modules, channels);
 		}
-
-		// if (verbose_ && vparam::Expand(name_)) {
-		// 	std::cout << "module    ch";
-		// 	for (const auto &name : vparam::VerboseNames(name_)) {
-		// 		std::cout << std::setw(8) << name;
-		// 	}
-		// 	std::cout << "\n";
-		// 	auto value_iter = values.begin();
-		// 	for (size_t i = 0; i < modules.size(); ++i) {
-		// 		for (size_t j = 0; j < channels.size(); ++j, ++value_iter) {
-		// 			std::cout << std::setw(6) << i << std::setw(6) << j
-		// 				<< std::hex;
-		// 			for (const auto &value : 
-		// 				vparam::VerboseValues(name_, *value_iter)) {
-						
-		// 				if (value) {
-		// 					std::cout << std::setw(8) << value;
-		// 				} else {
-		// 					std::cout << std::string(8, ' ');
-		// 				}
-		// 			}
-		// 			std::cout << "\n" << std::dec;
-		// 		}
-		// 	}
-
-		// } else {
-		// 	std::cout << "module";
-		// 	for (const auto &c : channels) {
-		// 		std::cout << std::setw(8) << "ch" + std::to_string(c);
-		// 	}
-		// 	std::cout << "\n";
-		// 	auto value_iter = values.begin();
-		// 	for (const auto &m : modules) {
-		// 		std::cout << std::setw(6) << m;
-		// 		for (size_t c = 0; c < channels.size(); ++c, ++value_iter) {
-		// 			std::cout << "  " << std::setfill(' ') << std::setw(6) << *value_iter;
-		// 		}
-		// 		std::cout << "\n";
-		// 	}
-		// }
 	
 	} else {
 		throw UserError("Invalid paraemter" + name_ + ".\n");

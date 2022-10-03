@@ -106,7 +106,7 @@ std::string ListParameters(ParameterType type) {
 			}
 			result += "  " + parameter + "\n";
 			for (const auto &info : info_list) {
-				result += "    " + info.name + "(";
+				result += "    " + info.name + " (";
 				for (const auto &alias : info.alias) {
 					result += alias + ", ";
 				}

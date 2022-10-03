@@ -46,7 +46,7 @@ private:
 	enum class ViewType {
 		kModuleParameter = 0,
 		kOneChannelParameter,
-		kServeralChannelParameter
+		kSeveralChannelParameter
 	};
 
 	ViewType type_;
@@ -70,11 +70,6 @@ std::ostream& operator<<(std::ostream &os, const View<Value> &view) {
 			os << std::setw(6) << view.modules_[i];
 			for (size_t j = 0; j < view.parameters_.size(); ++j) {
 				if (sizeof(Value) == 1) {
-					// if (values_[i*parameters_.size() + j]) {
-					// 	os << std::string(7, ' ') << "*";
-					// } else {
-					// 	os << std::string(8, ' ');
-					// }
 					os << std::string(7, ' ')
 						<< " *"[static_cast<size_t>(
 							view.values_[
@@ -107,15 +102,14 @@ std::ostream& operator<<(std::ostream &os, const View<Value> &view) {
 		}
 
 
-	} else if (view.type_ == View<Value>::ViewType::kServeralChannelParameter) {
-		
+	} else if (view.type_ == View<Value>::ViewType::kSeveralChannelParameter) {
+
 		os << "module    ch";
 		for (const auto &name : view.parameters_) {
 			os << std::setw(8) << name;
 		}
 		os << "\n";
 		for (size_t i = 0; i < view.modules_.size(); ++i) {
-			os << std::setw(6) << i;
 			for (size_t j = 0; j < view.channels_.size(); ++j) {
 				os << std::setw(6) << i << std::setw(6) << j << std::hex;
 				for (size_t k = 0; k < view.parameters_.size(); ++k) {
@@ -123,15 +117,20 @@ std::ostream& operator<<(std::ostream &os, const View<Value> &view) {
 						os << std::string(7, ' ')
 							<< " *"[static_cast<size_t>(
 								view.values_[
-									i * view.parameters_.size() + j
+									(i * view.channels_.size() + j)
+										* view.parameters_.size() + k
 								]
 							)];
 					} else {
 						os << std::hex << std::setw(8)
-							<< view.values_[i*view.parameters_.size() + j]
+							<< view.values_[
+								(i * view.channels_.size() + j)
+									* view.parameters_.size() + k
+							]
 							<< std::dec;
 					}
 				}
+				os << "\n";
 			}
 		}
 		

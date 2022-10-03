@@ -6,11 +6,11 @@
     "modules": [
         {
             "slot": 2,
-            "template": "500M"
+            "template": "100M"
         },
         {
             "slot": 3,
-            "template": "500M"
+            "template": "100M"
         },
         {
             "slot": 4,
@@ -22,7 +22,15 @@
         },
 		{
 			"slot": 6,
-			"template": "100M"
+			"template": "250M-16bit"
+		},
+		{
+			"slot": 7,
+			"template": "250M"
+		},
+		{
+			"slot": 8,
+			"template": "250M-16bit"
 		}
     ],
     "run": {
@@ -52,6 +60,17 @@
             "sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/syspixie16_revfpku_adc250hz_r44499.bin",
             "var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_14b250m_release_11032020/Pixie16DSP_revfpku_14b250m_r44496.var",
             "version": "44496"
+        },
+		{
+            "bits": 16,
+            "fippi": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_16b250m_release_11022020/fippixie16_revfpku_16b250m_r45222.bin",
+            "ldr": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_16b250m_release_11022020/Pixie16DSP_revfpku_16b250m_r44497.ldr",
+            "name": "250M-16bit",
+            "rate": 250,
+            "rev": 15,
+            "sys": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_16b250m_release_11022020/syspixie16_revfpku_adc250hz_r44499.bin",
+            "var": "/home/test/Documents/PKUXIADAQ/firmware/pixie16_revfpku_16b250m_release_11022020/Pixie16DSP_revfpku_16b250m_r44497.var",
+            "version": "44497"
         },
         {
             "bits": 14,
