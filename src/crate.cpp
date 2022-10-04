@@ -56,7 +56,10 @@ std::vector<std::string> VerboseNames(const std::string &name) {
 }
 
 
-std::vector<unsigned int> VerboseValues(const std::string &name, unsigned int value) {
+std::vector<unsigned int> VerboseValues(
+	const std::string &name,
+	unsigned int value
+) {
 	std::vector<unsigned int> result;
 	for (const auto &info : verbose_parameters.at(name)) {
 		result.push_back((value >> info.bit) & ((0x1 << info.length)-1));
@@ -73,6 +76,101 @@ std::vector<unsigned int> VerboseValues(const std::string &name, double value) {
 		result.push_back((cast_value >> info.bit) & ((0x1 << info.length)-1));
 	}
 	return result;
+}
+
+
+const VerboseParameterInformation& SearchExtractParameter(const std::string &extract) {
+	for (const auto &[parent, info_list] : verbose_parameters) {
+		for (const auto &info : info_list) {
+			if (info.name == extract) {
+				return info;
+			}
+			for (const auto &alias : info.alias) {
+				if (alias == extract) {
+					return info;
+				}
+			}
+		}
+	}
+	return verbose_parameters.at("INVALID")[0];
+}
+
+template <typename Value>
+Value VerboseValue(
+	const std::string &extract,
+	const std::string &parent,
+	Value value
+) {
+	auto search = verbose_parameters.find(parent);
+	if (search == verbose_parameters.end()) {
+		return Value(0);
+	}
+	for (const auto &info : search->second) {
+		if (info.name != extract) {
+			bool found = false;
+			for (const auto &alias : info.alias) {
+				if (alias == extract) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) continue;
+		}
+
+		unsigned int cast_value = static_cast<unsigned int>(value);
+		return static_cast<Value>(
+			(cast_value >> info.bit) & ((0x1 << info.length)-1)
+		);
+	}
+	return static_cast<Value>(0);
+}
+
+
+template <typename Value>
+Value VerboseValue(const std::string &extract, Value value) {
+	// for (const auto &[parent, info_list] : verbose_parameters) {
+	// 	for (const auto &info : info_list) {
+	// 		if (info.name != extract) {
+	// 			bool found = false;
+	// 			for (const auto &alias : info.alias) {
+	// 				if (alias == extract) {
+	// 					found = true;
+	// 					break;
+	// 				}
+	// 			}
+	// 			if (!found) continue;
+	// 		}
+
+	// 		unsigned int cast_value = static_cast<unsigned int>(value);
+	// 		return static_cast<Value>(
+	// 			(cast_value >> info.bit) & ((0x1 << info.length)-1)
+	// 		);
+	// 	}
+	// }
+	const auto search = SearchExtractParameter(extract);
+	return static_cast<Value>(
+		(static_cast<unsigned int>(value) >> search.bit)
+			& ((0x1 << search.length) - 1)
+	);
+}
+
+
+std::string ParentParameter(const std::string &extract) {
+	// for (const auto &[parent, info_list] : verbose_parameters) {
+	// 	for (const auto &info : info_list) {
+	// 		if (info.name == extract) {
+	// 			return parent;
+	// 		}
+	// 		for (const auto &alias : info.alias) {
+	// 			if (alias == extract) {
+	// 				return parent;
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// return "";
+	const auto search = SearchExtractParameter(extract);
+	return search.name;
 }
 
 
@@ -455,8 +553,20 @@ double Crate::ReadParameter(
 	std::cout << message_(MsgLevel::kDebug)
 		<< "Crate::ReadChannelParameter(" << name << ", " << module
 		<< ", " << channel << ")\n";
+
 	xia_crate_.ready();
 	xia::pixie::crate::module_handle module_handler(xia_crate_, module);
+
+
+	std::string parent_parameter = vparam::ParentParameter(name);
+	if (!parent_parameter.empty()) {
+		return vparam::VerboseValue(
+			name,
+			parent_parameter,
+			module_handler->read(parent_parameter, channel)
+		);
+	}
+
 	return module_handler->read(name, channel);
 }
 

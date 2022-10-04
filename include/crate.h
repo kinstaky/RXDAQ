@@ -87,6 +87,12 @@ namespace vparam {
 				{"MVS", 20, 1, {"MODVETOSEL"}},
 				{"ETS", 21, 1, {"EXTTSENA"}}
 			}
+		},
+		{
+			"INVALID",
+			{
+				{"", 0, 0, {}}
+			}
 		}
 	};
 
@@ -139,6 +145,88 @@ namespace vparam {
 		const std::string &name,
 		double value
 	);
+
+	
+	/// @brief get the extract value of the verbose parameter
+	///
+	/// @tparam Value type of the value 
+	/// @param[in] extract name of extract parameter
+	/// @param[in] parent name of parent parameter
+	/// @param[in] value value of parent parameter
+	/// @returns value of extract parameter, otherwise 0
+	///
+	template <typename Value>
+	Value VerboseValue(
+		const std::string &extract,
+		const std::string &parent,
+		Value value
+	);
+
+
+	/// @brief get the extract value of the verbose parameter
+	///
+	/// @tparam Value type of the value 
+	/// @param[in] extract name of extract parameter
+	/// @param[in] value value of parent parameter
+	/// @returns value of extract parameter, otherwise 0
+	///
+	template <typename Value>
+	Value VerboseValue(const std::string &extract, Value value);
+
+
+
+	// /// @brief get verbose value of the extract parameter
+	// ///
+	// /// @param[in] extract name of the extract parameter
+	// /// @param[in] parent name of the parent parameter 
+	// /// @param[in] value value of the parent parameter
+	// /// @returns the verbose value of extract parameter
+	// /// 
+	// unsigned int VerboseValue(
+	// 	const std::string &extract,
+	// 	const std::string &parent,
+	// 	unsigned int value
+	// );
+	
+	
+	// /// @brief get verbose value of the extract parameter
+	// ///
+	// /// @param[in] extract name of the extract parameter
+	// /// @param[in] value value of the parent parameter
+	// /// @returns the verbose value of extract parameter
+	// /// 
+	// unsigned int VerboseValue(const std::string &extract, unsigned int value);
+
+
+	// /// @brief get verbose value of the extract parameter
+	// ///
+	// /// @param[in] extract name of the extract parameter
+	// /// @param[in] parent name of the parent parameter 
+	// /// @param[in] value value of the parent parameter
+	// /// @returns the verbose value of extract parameter
+	// /// 
+	// double VerboseValue(
+	// 	const std::string &extract,
+	// 	const std::string &parent,
+	// 	double value
+	// );
+
+
+	// /// @brief get verbose value of the extract parameter
+	// ///
+	// /// @param[in] extract name of the extract parameter
+	// /// @param[in] value value of the parent parameter
+	// /// @returns the verbose value of extract parameter
+	// /// 
+	// double VerboseValue(const std::string &extract, double value);
+
+
+	/// @brief get the name of parent parameter from the extract name
+	///
+	/// @param[in] name name of the extract parameter
+	/// @returns name of the parent parameter, empty string otherwise
+	/// 
+	std::string ParentParameter(const std::string &name);
 
 
 	/// @brief list the available verbose parameters in string

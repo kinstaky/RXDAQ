@@ -580,7 +580,6 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 			values.push_back(crate->ReadParameter(name_, m));
 		}
 
-
 		// output parameters
 		if (verbose_ && vparam::Expand(name_)) {
 			std::vector<std::string> names = vparam::VerboseNames(name_);
