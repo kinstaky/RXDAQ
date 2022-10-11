@@ -13,10 +13,11 @@ service ControlCrate {
 	rpc StopRun (EmptyMessage) returns (RunReply) {}
 }
 
-enum ExceptionType {
-	UNDEFINED = 0;
-	FATALERROR = 1;
-	WARNING = 2;
+enum StatusType {
+	SUCCESS = 0;
+	UNDEFINED = 1;
+	FATALERROR = 2;
+	WARNING = 3;
 };
 
 
@@ -24,9 +25,10 @@ message EmptyMessage {
 }
 
 message InitializeReply {
-	uint32 num = 1;
-	ExceptionType exception_type = 2;
-	string message = 3;
+	StatusType status_type = 1;
+	string status_message = 2;
+	
+	uint32 num = 3;
 }
 
 message BootRequest {
@@ -35,8 +37,8 @@ message BootRequest {
 }
 
 message EmptyReply {
-	ExceptionType exception_type = 1;
-	string message = 2;
+	StatusType status_type = 1;
+	string status_message = 2;
 }
 
 
@@ -48,10 +50,11 @@ message ReadRequest {
 }
 
 message ReadReply {
-	uint32 module_value = 1;
-	double channel_value = 2;
-	ExceptionType exception_type = 3;
-	string message = 4;
+	StatusType status_type = 1;
+	string status_message = 2;
+
+	uint32 module_value = 3;
+	double channel_value = 4;
 }
 
 
@@ -78,8 +81,9 @@ message RunRequest {
 
 
 message RunReply {
-	uint32 seconds = 1;
-	int32 run_number = 2;
-	ExceptionType exception_type = 3;
-	string message = 4;
+	StatusType status_type = 1;
+	string status_message = 2;
+
+	uint32 seconds = 3;
+	int32 run_number = 4;
 }

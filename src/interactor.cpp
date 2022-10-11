@@ -658,7 +658,7 @@ void ReadCommandParser::Run(std::shared_ptr<Crate> crate) {
 		}
 	
 	} else {
-		throw UserError("Invalid paraemter" + name_ + ".\n");
+		throw UserError("Invalid parameter " + name_ + ".\n");
 	}
 }
 
@@ -800,7 +800,7 @@ void WriteCommandParser::Run(std::shared_ptr<Crate> crate) {
 	}
 	auto type = crate->CheckParameter(name_);
 	if (type == ParameterType::kInvalid) {
-		throw UserError("Invalid paraemter" + name_ + ".\n");
+		throw UserError("Invalid parameter " + name_ + ".\n");
 	} else if (type == ParameterType::kModule) {
 
 		// prepare for modules to read

@@ -5,24 +5,29 @@ namespace rxdaq {
 
 template <typename Func, typename Reply, typename... Arg>
 grpc::Status HandleError(Func func, Reply *reply, Arg... args) {
+	std::string status_message = "";
 	try {
 		func(reply, args...);
-		reply->set_message("success");
-		return grpc::Status::OK;
+		reply->set_status_type(StatusType::SUCCESS);
+		reply->set_status_message("success");
 	} catch (const UserError &e) {
-		reply->set_exception_type(ExceptionType::WARNING);
-		reply->set_message("operation error: " + std::string(e.what()) + "\n");
+		reply->set_status_type(StatusType::WARNING);
+		reply->set_status_message("operation error: " + std::string(e.what()) + "\n");
+		status_message = "operation error: " + std::string(e.what()) + "\n";
 	} catch (const RXError &e) {
-		reply->set_exception_type(ExceptionType::FATALERROR);
-		reply->set_message("rxdaq error: " + std::string(e.what()) + "\n");
+		reply->set_status_type(StatusType::FATALERROR);
+		reply->set_status_message("rxdaq error: " + std::string(e.what()) + "\n");
+		status_message = "rxdaq error: " + std::string(e.what()) + "\n";
 	} catch (const xia::pixie::error::error &e) {
-		reply->set_exception_type(ExceptionType::FATALERROR);
-		reply->set_message("xia error: " + e.result_text() + "\n" + std::string(e.what()));
+		reply->set_status_type(StatusType::FATALERROR);
+		reply->set_status_message("xia error: " + e.result_text() + "\n" + std::string(e.what()));
+		status_message = "xia error: " + e.result_text() + "\n" + std::string(e.what());
 	} catch (const std::exception &e) {
-		reply->set_exception_type(ExceptionType::FATALERROR);
-		reply->set_message("exception: " + std::string(e.what()) + "\n");
+		reply->set_status_type(StatusType::FATALERROR);
+		reply->set_status_message("exception: " + std::string(e.what()) + "\n");
+		status_message = "exception: " + std::string(e.what()) + "\n";
 	}
-	return grpc::Status::CANCELLED;
+	return grpc::Status::OK;
 };
 
 
@@ -118,9 +123,9 @@ grpc::Status ControlCrateService::ReadParameter(
 		);
 	}
 
-	reply->set_exception_type(ExceptionType::FATALERROR);
-	reply->set_message("rxdaq error: unknown read parameter type\n");
-	return grpc::Status::CANCELLED;
+	reply->set_status_type(StatusType::FATALERROR);
+	reply->set_status_message("rxdaq error: unknown read parameter type\n");
+	return grpc::Status::OK;
 }
 
 
@@ -167,9 +172,9 @@ grpc::Status ControlCrateService::WriteParameter(
 			request->channel()
 		);
 	}
-	reply->set_exception_type(ExceptionType::FATALERROR);
-	reply->set_message("rxdaq error: unknown write parameter type\n");
-	return grpc::Status::CANCELLED;
+	reply->set_status_type(StatusType::FATALERROR);
+	reply->set_status_message("rxdaq error: unknown write parameter type\n");
+	return grpc::Status::OK;
 }
 
 

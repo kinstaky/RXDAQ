@@ -184,7 +184,7 @@ std::string ListParameters(ParameterType type) {
 			if (Crate::CheckParameter(parameter) != ParameterType::kModule) {
 				continue;
 			}
-			result += "  " + parameter + "\n";
+			result += "\n  " + parameter + "\n";
 			for (const auto &info : info_list) {
 				result += "    " + info.name + " (";
 				for (const auto &alias : info.alias) {
@@ -197,12 +197,12 @@ std::string ListParameters(ParameterType type) {
 
 	// channel parameters
 	if (type == ParameterType::kAll || type == ParameterType::kChannel) {
-		result += "\nVerbose channel parameters\n";
+		result += "\n\nVerbose channel parameters\n";
 		for (const auto &[parameter, info_list] : verbose_parameters) {
 			if (Crate::CheckParameter(parameter) != ParameterType::kChannel) {
 				continue;
 			}
-			result += "  " + parameter + "\n";
+			result += "\n  " + parameter + "\n";
 			for (const auto &info : info_list) {
 				result += "    " + info.name + " (";
 				for (const auto &alias : info.alias) {

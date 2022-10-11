@@ -1,6 +1,12 @@
 # legacy codes
 tools/
 
+# config file
+*.json
+
+# log file
+*.log
+
 # C/C++ build outputs
 .build/
 bins
@@ -16,6 +22,3 @@ bazel-*
 
 # Visual Studio Code artifacts
 .vscode/*
-
-# pixie sdk log
-Pixie16Msg.log

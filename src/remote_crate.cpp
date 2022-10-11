@@ -11,15 +11,20 @@ namespace rxdaq {
 RemoteCrate *RemoteCrate::instance_ = nullptr;
 
 template <typename Reply>
-void ThrowErrors(grpc::Status &status, Reply &reply) {
-	std::cerr << "rpc status not ok: error code "
-		<< status.error_code() << ": " << status.error_message() << "\n";
-	
-	if (reply.exception_type() == ExceptionType::WARNING) {
-		throw UserError(reply.message());
+void CheckStatus(grpc::Status &status, Reply &reply) {
+	if (status.ok()) {
+		if (reply.status_type() == StatusType::WARNING) {
+			throw UserError(reply.status_message());
+		} else if (reply.status_type() != StatusType::SUCCESS) {
+			throw std::runtime_error(reply.status_message());
+		}
 	} else {
-		throw std::runtime_error(reply.message());
+		std::stringstream ss;
+		ss << "rpc status not ok: error code " << status.error_code() << "\n"
+			<< status.error_message() << "\n";
+		throw std::runtime_error(ss.str());
 	}
+	return;
 }
 
 
@@ -35,12 +40,9 @@ void RemoteCrate::Initialize(const std::string &) {
 	grpc::ClientContext context;
 
 	grpc::Status status = stub_->Initialize(&context, request, &reply);
-	if (status.ok()) {
-			module_num_ = reply.num();
-	} else {
-		std::cerr << "RemoteCrate: Initialize failed: " << status.error_code() << ": "
-			<< status.error_message() << "\n" << reply.message() << "\n";
-	}
+	
+	CheckStatus(status, reply);
+	module_num_ = reply.num();
 }
 
 
@@ -53,9 +55,8 @@ void RemoteCrate::Boot(unsigned short module_id, bool fast) {
 	grpc::ClientContext context;
 
 	grpc::Status status = stub_->Boot(&context, request, &reply);
-	if (!status.ok()) {
-		ThrowErrors(status, reply);
-	}
+
+	CheckStatus(status, reply);
 }
 
 
@@ -73,12 +74,8 @@ unsigned int RemoteCrate::ReadParameter(
 	
 	grpc::Status status = stub_->ReadParameter(&context, request, &reply);
 
-	if (status.ok()) {
-		return reply.module_value();
-	} else {
-		ThrowErrors(status, reply);
-		return 0;
-	}
+	CheckStatus(status, reply);
+	return reply.module_value();
 }
 
 
@@ -97,12 +94,9 @@ double RemoteCrate::ReadParameter(
 	grpc::ClientContext context;
 
 	grpc::Status status = stub_->ReadParameter(&context, request, &reply);
-	if (status.ok()) {
-		return reply.channel_value();
-	} else {
-		ThrowErrors(status, reply);
-		return 0.0;
-	}
+	
+	CheckStatus(status, reply);
+	return reply.channel_value();
 }
 
 
@@ -121,9 +115,8 @@ void RemoteCrate::WriteParameter(
 	grpc::ClientContext context;
 
 	grpc::Status status = stub_->WriteParameter(&context, request, &reply);
-	if (!status.ok()) {
-		ThrowErrors(status, reply);
-	}
+	
+	CheckStatus(status, reply);
 }
 
 
@@ -144,9 +137,8 @@ void RemoteCrate::WriteParameter(
 	grpc::ClientContext context;
 
 	grpc::Status status = stub_->WriteParameter(&context, request, &reply);
-	if (!status.ok()) {
-		ThrowErrors(status, reply);
-	}
+
+	CheckStatus(status, reply);
 }
 
 
@@ -159,9 +151,7 @@ void RemoteCrate::ImportParameters(const std::string &path) {
 
 	grpc::Status status = stub_->ImportParameters(&context, request, &reply);
 
-	if (!status.ok()) {
-		ThrowErrors(status, reply);
-	}
+	CheckStatus(status, reply);
 }
 
 
@@ -174,9 +164,7 @@ void RemoteCrate::ExportParameters(const std::string &path) {
 
 	grpc::Status status = stub_->ExportParameters(&context, request, &reply);
 
-	if (!status.ok()) {
-		ThrowErrors(status, reply);
-	}
+	CheckStatus(status, reply);
 }
 
 
@@ -209,7 +197,7 @@ void RemoteCrate::StartRun(
 			grpc::Status status = call->status;
 			RunReply reply = call->reply;
 			delete call;
-			ThrowErrors(status, reply);
+			CheckStatus(status, reply);
 		}
 		if (call->type == 1) {
 			// exit the loop

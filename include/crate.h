@@ -89,6 +89,78 @@ namespace vparam {
 			}
 		},
 		{
+			"MultiplicityMaskL",
+			{
+				{"Itself", 0, 16, {"Multi_Itself"}},
+				{"Right", 16, 16, {"Multi_Right"}}
+			}
+		},
+		{
+			"MultiplicityMaskH",
+			{
+				{"Left", 0, 16, {"Multi_Left"}},
+				{"MCS", 16, 1, {"Multi_Coin_Sel"}},
+				{"MT", 17, 5, {"Multi_Thres"}},
+				{"CIT", 22, 3, {"Coin_Itself_Thres"}},
+				{"CRT", 25, 3, {"Coin_Right_Thres"}},
+				{"CLT", 28, 3, {"Coin_Left_Thres"}},
+				{"CVTS", 31, 1, {"ExtGroup_MultiCoin_Sel"}}
+			}
+		},
+		{
+			"FastTrigBackplaneEna",
+			{
+				{"ToLeft", 0, 16, {"FastTrigBackplaneLeft"}},
+				{"ToRight", 16, 16, {"FastTrigBackplaneRight"}}
+			}
+		},
+		{
+			"TrigConfig0",
+			{
+				{"IFTS", 0, 4, {"Int_FastTrig_Sel"}},
+				{"EFTI", 4, 8, {"Ext_FastTrig_In"}},
+				{"IVTS", 8, 4, {"Int_ValidTrig_Sel"}},
+				{"DSG", 12, 3, {"Debug_Signal_Group"}},
+				{"DSE", 15, 1, {"Debug_Signal_Enable"}},
+				{"DSC", 16, 4, {"Debug_Signal_Channel"}},
+				{"DSS", 20, 4, {"Debug_Signal_Source"}},
+				{"MFTS", 24, 2, {"Module_FastTrig_Sel"}},
+				{"MVTS", 26, 2, {"Module_ValidTrig_Sel"}},
+				{"EVTI", 28, 4, {"Ext_ValidTrig_In"}}
+			}
+		},
+		{
+			"TrigConfig1",
+			{
+				{"GT00", 0, 4, {"GroupTrig0_0", "GroupTrig0_Itself"}},
+				{"GT01", 4, 4, {"GroupTrig0_1", "GroupTrig0_Right"}},
+				{"GT02", 8, 4, {"GroupTrig0_2", "GroupTrig0_Left"}},
+				{"GT10", 12, 4, {"GroupTrig1_0", "GroupTrig1_Itself"}},
+				{"GT11", 16, 4, {"GroupTrig1_1", "GroupTrig1_Right"}},
+				{"GT12", 20, 4, {"GroupTrig1_2", "GroupTrig1_Left"}},
+				{"GT20", 24, 4, {"GroupTrig2_0", "GroupTrig2_Itself"}},
+				{"GT21", 28, 4, {"GroupTrig2_1", "GroupTrig2_Right"}}
+			}
+		},
+		{
+			"TrigConfig2",
+			{
+				{"GT22", 0, 4, {"GroupTrig2_2", "GroupTrig2_Left"}},
+				{"GT30", 4, 8, {"GroupTrig3_0", "GroupTrig3_Itself"}},
+				{"GT31", 8, 4, {"GroupTrig3_1", "GroupTrig3_Right"}},
+				{"GT32", 12, 4, {"GroupTrig3_2", "GroupTrig3_Left"}},
+				{"GT0S", 16, 2, {"GroupTrig0_Sel"}},
+				{"GT1S", 18, 2, {"GroupTrig1_Sel"}},
+				{"GT2S", 20, 2, {"GroupTrig2_Sel"}},
+				{"GT3S", 22, 2, {"GroupTrig3_Sel"}},
+				{"GT0EFT", 24, 1, {"GroupTrig0_ExtFastTrig"}},
+				{"GT1EFT", 25, 1, {"GroupTrig1_ExtFastTrig"}},
+				{"GT2EFT", 26, 1, {"GroupTrig2_ExtFastTrig"}},
+				{"GT3EFT", 27, 1, {"GroupTrig3_ExtFastTrig"}},
+				{"CTS", 28, 4, {"ChanTrig_Sel"}}
+			}
+		},
+		{
 			"INVALID",
 			{
 				{"", 0, 0, {}}
